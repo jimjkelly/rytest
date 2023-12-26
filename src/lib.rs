@@ -222,6 +222,7 @@ pub fn output_results(rx: mpsc::Receiver<TestCase>) -> Rysult<()> {
 
 #[cfg(test)]
 mod tests {
+    use pretty_assertions::{assert_eq, assert_ne};
     use std::sync::mpsc;
     use crate::TestCase;
 
@@ -243,7 +244,7 @@ mod tests {
             expected_tests: vec![
                 TestCase {
                     file: "tests/input/folder/subfolder/test_subfolder_file.py".to_string(),
-                    test: "test_something".to_string(),
+                    test: "test_parameterized".to_string(),
                     passed: false,
                 },
                 TestCase {
