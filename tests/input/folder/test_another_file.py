@@ -4,6 +4,7 @@ def test_another_function():
     pass
 
 
+"""
 def accepts(*types):
     def check_accepts(f):
         assert len(types) == f.func_code.co_argcount
@@ -20,4 +21,4 @@ def accepts(*types):
 @accepts(int, (int, float))
 def test_function_with_decorator(arg1, arg2):
     pass
-
+"""

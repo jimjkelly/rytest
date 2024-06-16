@@ -3,4 +3,4 @@ Nothing from this file should get tested.
 """
 
 def util():
-    pass
+    assert False, "This should not be called"
