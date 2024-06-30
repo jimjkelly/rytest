@@ -17,6 +17,7 @@ type Rysult<T> = Result<T, Box<dyn Error>>;
 pub struct Config {
     files: Vec<String>,
     watch: bool,
+    file_prefix: String,
     test_prefix: String,
 }
 
@@ -46,10 +47,17 @@ pub fn get_args() -> Rysult<Config> {
                 .takes_value(false)
         )
         .arg(
+            Arg::with_name("file_prefix")
+                .short("f")
+                .long("file_prefix")
+                .help("The prefix to search for to indicate a file contains tests")
+                .default_value("test_")
+        )
+        .arg(
             Arg::with_name("test_prefix")
                 .short("p")
                 .long("test_prefix")
-                .help("The prefix to search for to indicate something is a test")
+                .help("The prefix to search for to indicate a function is a test")
                 .default_value("test_")
         )
         .get_matches();
@@ -57,6 +65,7 @@ pub fn get_args() -> Rysult<Config> {
     Ok(Config {
         files: matches.values_of_lossy("files").unwrap(),
         watch: matches.is_present("watch"),
+        file_prefix: matches.value_of("file_prefix").unwrap().to_string(),
         test_prefix: matches.value_of("test_prefix").unwrap().to_string(),
     })
 }
@@ -68,7 +77,7 @@ pub fn run(config: Config) -> Rysult<()> {
 
     let _ = thread::spawn(move || {
         let tx_files = tx_files.clone();
-        find_files(config.files.clone(), config.watch, tx_files).unwrap();
+        find_files(config.files.clone(), config.file_prefix.as_str(), config.watch, tx_files).unwrap();
     });
 
     let _ = thread::spawn(move || {
@@ -91,12 +100,12 @@ pub fn run(config: Config) -> Rysult<()> {
     Ok(())
 }
 
-pub fn find_files(paths: Vec<String>, watch: bool, tx: mpsc::Sender<String>) -> Rysult<()> {
+pub fn find_files(paths: Vec<String>, prefix: &str, watch: bool, tx: mpsc::Sender<String>) -> Rysult<()> {
     for path in &paths {
         for entry in glob(path.as_str())? {
             match entry {
                 Ok(p) => {
-                    if p.is_file() && p.file_stem().unwrap().to_string_lossy().starts_with("test_") && p.extension().unwrap() == "py" {
+                    if p.is_file() && p.file_stem().unwrap().to_string_lossy().starts_with(prefix) && p.extension().unwrap() == "py" {
                         tx.send(p.to_str().unwrap().to_string())?;
                     }
                 },
