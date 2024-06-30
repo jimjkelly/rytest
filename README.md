@@ -26,7 +26,7 @@ Pipeline of:
 
 gather
 test
-resulst
+results
 
 
 add out of the box tracing
