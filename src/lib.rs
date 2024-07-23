@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::error::Error;
 use std::path::Path;
 use std::sync::mpsc::{self, RecvError};
@@ -6,6 +7,7 @@ use clap::{App, Arg};
 use std::fs::File;
 use std::io::Read;
 use rustpython_parser::{Parse, ast}; 
+use rustpython_parser::ast::ExprName;
 use rustpython_parser::ast::Stmt::FunctionDef;
 use glob::glob;
 
@@ -19,13 +21,21 @@ pub struct Config {
     watch: bool,
     file_prefix: String,
     test_prefix: String,
+    verbose: bool,
 }
 
 pub struct TestCase {
     file: String,
     test: String,
     passed: bool,
+    error: Option<PyErr>,
 }
+
+pub struct Fixture {
+    file: String,
+    name: String,
+}
+
 
 pub fn get_args() -> Rysult<Config> {
     let matches = App::new("rytest")
@@ -60,6 +70,13 @@ pub fn get_args() -> Rysult<Config> {
                 .help("The prefix to search for to indicate a function is a test")
                 .default_value("test_")
         )
+        .arg(
+            Arg::with_name("verbose")
+                .short("v")
+                .long("verbose")
+                .help("Verbose output")
+                .takes_value(false)
+        )
         .get_matches();
 
     Ok(Config {
@@ -67,6 +84,7 @@ pub fn get_args() -> Rysult<Config> {
         watch: matches.is_present("watch"),
         file_prefix: matches.value_of("file_prefix").unwrap().to_string(),
         test_prefix: matches.value_of("test_prefix").unwrap().to_string(),
+        verbose: matches.is_present("verbose"),
     })
 }
 
@@ -92,7 +110,7 @@ pub fn run(config: Config) -> Rysult<()> {
 
     let handle_output = thread::spawn(move || {
         let rx_results = rx_results;
-        output_results(rx_results).unwrap();
+        output_results(rx_results, config.verbose).unwrap();
     });
 
     handle_output.join().unwrap();
@@ -141,9 +159,10 @@ pub fn find_tests(prefix: String, rx: mpsc::Receiver<String>, tx: mpsc::Sender<T
                                         file: file_name.clone(),
                                         test: node.name.to_string(),
                                         passed: false,
+                                        error: None,
                                     }
                                 )?,
-                                _ => (),
+                                _ => println!("{}: Skipping {:?}\n\n", file_name, stmt),
                             }
                         }
                     
@@ -159,13 +178,55 @@ pub fn find_tests(prefix: String, rx: mpsc::Receiver<String>, tx: mpsc::Sender<T
     Ok(())
 }
 
+
+fn get_fixtures_for_dir(dir: &Path) -> Rysult<HashMap<String, Fixture>> {
+    if !dir.is_dir() {
+        return Err("Not a directory".into());
+    }
+
+    let mut fixtures = HashMap::new();
+
+    let conftest = dir.join("conftest.py");
+
+    if conftest.exists() {
+        println!("Found conftest: {:?}", conftest);
+        let mut data = String::new();
+        let mut file = File::open(conftest.clone())?;
+        file.read_to_string(&mut data)?;
+        let ast = ast::Suite::parse(data.as_str(), "<embedded>");
+
+        match ast {
+            Ok(ast) => {
+                for stmt in ast {
+                    match stmt {
+                        FunctionDef(node) if node.decorator_list.iter().any(|dec| dec.as_name_expr().unwrap().id == "fixture".to_string()) => println!("{:?}: Found function {:?}\n\n", dir, node),
+                        _ => println!("{:?}: Skipping {:?}\n\n", dir, stmt),
+                    }
+                }
+            
+            },
+            Err(e) => println!("Error parsing {:?}: {}", dir, e),
+        }
+    }
+
+    Ok(fixtures)
+}
+
+
 pub fn run_tests(rx: mpsc::Receiver<TestCase>, tx: mpsc::Sender<TestCase>) -> Rysult<()> {
+    // let fixtures = HashMap::new(); 
+
     loop {
         match rx.recv() {
             Ok(mut test) => {
-                let current_dir = env::current_dir().unwrap();
-                let path = Path::new(&current_dir);
-                let py_code = fs::read_to_string(path.join(test.file.clone()))?;
+                let currrent_dir = env::current_dir().unwrap();
+                let current_dir = Path::new(&currrent_dir);
+                let path_buf = current_dir.join(test.file.clone());
+                let path = path_buf.as_path();
+
+                let _fixtures = get_fixtures_for_dir(path.parent().unwrap())?;
+
+                let py_code = fs::read_to_string(path)?;
 
                 let result = Python::with_gil(|py| -> PyResult<Py<PyAny>>{
                     let syspath = py.import_bound("sys").unwrap().getattr("path").unwrap().downcast_into::<PyList>().unwrap();
@@ -187,6 +248,15 @@ pub fn run_tests(rx: mpsc::Receiver<TestCase>, tx: mpsc::Sender<TestCase>) -> Ry
                 });
 
                 test.passed = result.is_ok();
+
+                match result.is_ok() {
+                    true => test.passed = true,
+                    false => {
+                        test.error = Some(result.err().unwrap());
+                        test.passed = false;
+                    }
+                }
+
                 tx.send(test)?;
             }, 
             // TODO: Handle this better - should we be able to tell the difference between the channel being closed and an error?
@@ -197,7 +267,8 @@ pub fn run_tests(rx: mpsc::Receiver<TestCase>, tx: mpsc::Sender<TestCase>) -> Ry
     Ok(())
 }
 
-pub fn output_results(rx: mpsc::Receiver<TestCase>) -> Rysult<()> {
+
+pub fn output_results(rx: mpsc::Receiver<TestCase>, verbose: bool) -> Rysult<()> {
     let mut passed = 0;
     let mut failed = 0;
 
@@ -209,6 +280,12 @@ pub fn output_results(rx: mpsc::Receiver<TestCase>) -> Rysult<()> {
                     passed += 1;
                 } else {
                     failed += 1;
+                    if verbose {
+                        if let Some(error) = result.error {
+                            println!("{}", error);
+                        }
+                    }
+
                 }
             },
             // TODO: Handle this better - should we be able to tell the difference between the channel being closed and an error?
