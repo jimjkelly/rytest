@@ -19,10 +19,6 @@ jobs:
           components: clippy
       - uses: r7kamura/rust-problem-matchers@v1
       - uses: actions-rs/cargo@v1
-        name: cargo build
-        with:
-          command: build
-      - uses: actions-rs/cargo@v1
         name: cargo clippy
         with:
           command: clippy
