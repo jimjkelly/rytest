@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 use std::error::Error;
 use std::path::Path;
-use std::sync::mpsc::{self, RecvError};
+use std::sync::mpsc::{self};
 use std::{env, fs, thread};
 use clap::{App, Arg};
 use std::fs::File;
 use std::io::Read;
 use rustpython_parser::{Parse, ast}; 
-use rustpython_parser::ast::ExprName;
+
 use rustpython_parser::ast::Stmt::FunctionDef;
 use glob::glob;
 
@@ -32,8 +32,6 @@ pub struct TestCase {
 }
 
 pub struct Fixture {
-    file: String,
-    name: String,
 }
 
 
@@ -142,36 +140,30 @@ pub fn find_files(paths: Vec<String>, prefix: &str, watch: bool, tx: mpsc::Sende
 }
 
 pub fn find_tests(prefix: String, rx: mpsc::Receiver<String>, tx: mpsc::Sender<TestCase>) -> Rysult<()> {
-    loop {
-        match rx.recv() {
-            Ok(file_name) => {
-                let mut data = String::new();
-                let mut file = File::open(file_name.clone())?;
-                file.read_to_string(&mut data)?;
-                let ast = ast::Suite::parse(data.as_str(), "<embedded>");
+    while let Ok(file_name) = rx.recv() {
+        let mut data = String::new();
+        let mut file = File::open(file_name.clone())?;
+        file.read_to_string(&mut data)?;
+        let ast = ast::Suite::parse(data.as_str(), "<embedded>");
 
-                match ast {
-                    Ok(ast) => {
-                        for stmt in ast {
-                            match stmt {
-                                FunctionDef(node) if node.name.starts_with(&prefix) => tx.send(
-                                    TestCase {
-                                        file: file_name.clone(),
-                                        test: node.name.to_string(),
-                                        passed: false,
-                                        error: None,
-                                    }
-                                )?,
-                                _ => println!("{}: Skipping {:?}\n\n", file_name, stmt),
+        match ast {
+            Ok(ast) => {
+                for stmt in ast {
+                    match stmt {
+                        FunctionDef(node) if node.name.starts_with(&prefix) => tx.send(
+                            TestCase {
+                                file: file_name.clone(),
+                                test: node.name.to_string(),
+                                passed: false,
+                                error: None,
                             }
-                        }
-                    
-                    },
-                    Err(e) => println!("Error parsing {}: {}", file_name, e),
+                        )?,
+                        _ => println!("{}: Skipping {:?}\n\n", file_name, stmt),
+                    }
                 }
+            
             },
-            // TODO: Handle this better - should we be able to tell the difference between the channel being closed and an error?
-            Err(RecvError) => break,
+            Err(e) => println!("Error parsing {}: {}", file_name, e),
         }
     }
 
@@ -184,7 +176,7 @@ fn get_fixtures_for_dir(dir: &Path) -> Rysult<HashMap<String, Fixture>> {
         return Err("Not a directory".into());
     }
 
-    let mut fixtures = HashMap::new();
+    let fixtures = HashMap::new();
 
     let conftest = dir.join("conftest.py");
 
@@ -199,7 +191,7 @@ fn get_fixtures_for_dir(dir: &Path) -> Rysult<HashMap<String, Fixture>> {
             Ok(ast) => {
                 for stmt in ast {
                     match stmt {
-                        FunctionDef(node) if node.decorator_list.iter().any(|dec| dec.as_name_expr().unwrap().id == "fixture".to_string()) => println!("{:?}: Found function {:?}\n\n", dir, node),
+                        FunctionDef(node) if node.decorator_list.iter().any(|dec| dec.as_name_expr().unwrap().id == *"fixture") => println!("{:?}: Found function {:?}\n\n", dir, node),
                         _ => println!("{:?}: Skipping {:?}\n\n", dir, stmt),
                     }
                 }
@@ -216,52 +208,36 @@ fn get_fixtures_for_dir(dir: &Path) -> Rysult<HashMap<String, Fixture>> {
 pub fn run_tests(rx: mpsc::Receiver<TestCase>, tx: mpsc::Sender<TestCase>) -> Rysult<()> {
     // let fixtures = HashMap::new(); 
 
-    loop {
-        match rx.recv() {
-            Ok(mut test) => {
-                let currrent_dir = env::current_dir().unwrap();
-                let current_dir = Path::new(&currrent_dir);
-                let path_buf = current_dir.join(test.file.clone());
-                let path = path_buf.as_path();
+    while let Ok(mut test) = rx.recv() {
+        let currrent_dir = env::current_dir().unwrap();
+        let current_dir = Path::new(&currrent_dir);
+        let path_buf = current_dir.join(test.file.clone());
+        let path = path_buf.as_path();
 
-                let _fixtures = get_fixtures_for_dir(path.parent().unwrap())?;
+        let _fixtures = get_fixtures_for_dir(path.parent().unwrap())?;
 
-                let py_code = fs::read_to_string(path)?;
+        let py_code = fs::read_to_string(path)?;
 
-                let result = Python::with_gil(|py| -> PyResult<Py<PyAny>>{
-                    let syspath = py.import_bound("sys").unwrap().getattr("path").unwrap().downcast_into::<PyList>().unwrap();
-                    syspath.insert(0, &path).unwrap();
+        let result = Python::with_gil(|py| -> PyResult<Py<PyAny>>{
+            let syspath = py.import_bound("sys").unwrap().getattr("path").unwrap().downcast_into::<PyList>().unwrap();
+            syspath.insert(0, path).unwrap();
 
-                    let module = PyModule::from_code_bound(py, &py_code, "", "");
-                    if module.is_err() {
-                        return Err(module.unwrap_err())
-                    }
-                    
-                    let module = module.unwrap();
-                    let app = module.getattr(test.test.as_str());
-                    if app.is_err() {
-                        return Err(app.unwrap_err())
-                    }
-                    
-                    let app: Py<PyAny> = app.unwrap().into();
-                    app.call0(py)
-                });
+            let module = PyModule::from_code_bound(py, &py_code, "", "")?;
+            let app: Py<PyAny> = module.getattr(test.test.as_str())?.into();
+            app.call0(py)
+        });
 
-                test.passed = result.is_ok();
+        test.passed = result.is_ok();
 
-                match result.is_ok() {
-                    true => test.passed = true,
-                    false => {
-                        test.error = Some(result.err().unwrap());
-                        test.passed = false;
-                    }
-                }
-
-                tx.send(test)?;
-            }, 
-            // TODO: Handle this better - should we be able to tell the difference between the channel being closed and an error?
-            Err(RecvError) => break,
+        match result.is_ok() {
+            true => test.passed = true,
+            false => {
+                test.error = Some(result.err().unwrap());
+                test.passed = false;
+            }
         }
+
+        tx.send(test)?;
     }
 
     Ok(())
@@ -272,24 +248,18 @@ pub fn output_results(rx: mpsc::Receiver<TestCase>, verbose: bool) -> Rysult<()>
     let mut passed = 0;
     let mut failed = 0;
 
-    loop {
-        match rx.recv() {
-            Ok(result) => {
-                println!("{}:{} - {}", result.file, result.test, if result.passed { "PASSED" } else { "FAILED" });
-                if result.passed {
-                    passed += 1;
-                } else {
-                    failed += 1;
-                    if verbose {
-                        if let Some(error) = result.error {
-                            println!("{}", error);
-                        }
-                    }
-
+    while let Ok(result) = rx.recv() {
+        println!("{}:{} - {}", result.file, result.test, if result.passed { "PASSED" } else { "FAILED" });
+        if result.passed {
+            passed += 1;
+        } else {
+            failed += 1;
+            if verbose {
+                if let Some(error) = result.error {
+                    println!("{}", error);
                 }
-            },
-            // TODO: Handle this better - should we be able to tell the difference between the channel being closed and an error?
-            Err(RecvError) => break,
+            }
+
         }
     }
 
