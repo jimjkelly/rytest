@@ -23,6 +23,19 @@ To test against our local test fixtures, run:
 cargo run -- tests/**/*.py -v
 ```
 
+## Contributing
+
+Before contributing code to this repository, recognize that you should run the following to satisfy CI:
+
+```bash
+cargo fmt
+cargo build
+cargo clippy
+cargo test
+```
+
+These will all be run in CI to validate your code.
+
 ## Misc
 
 python 3.12

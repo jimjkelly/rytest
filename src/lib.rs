@@ -1,15 +1,15 @@
+use clap::{App, Arg};
+use rustpython_parser::{ast, Parse};
 use std::collections::HashMap;
 use std::error::Error;
+use std::fs::File;
+use std::io::Read;
 use std::path::Path;
 use std::sync::mpsc::{self};
 use std::{env, fs, thread};
-use clap::{App, Arg};
-use std::fs::File;
-use std::io::Read;
-use rustpython_parser::{Parse, ast}; 
 
-use rustpython_parser::ast::Stmt::FunctionDef;
 use glob::glob;
+use rustpython_parser::ast::Stmt::FunctionDef;
 
 use pyo3::prelude::*;
 use pyo3::types::PyList;
@@ -31,9 +31,7 @@ pub struct TestCase {
     error: Option<PyErr>,
 }
 
-pub struct Fixture {
-}
-
+pub struct Fixture {}
 
 pub fn get_args() -> Rysult<Config> {
     let matches = App::new("rytest")
@@ -45,35 +43,35 @@ pub fn get_args() -> Rysult<Config> {
                 .value_name("FILE")
                 .help("Input file(s)")
                 .default_value("-")
-                .min_values(1)
+                .min_values(1),
         )
         .arg(
             Arg::with_name("watch")
                 .short("w")
                 .long("watch")
                 .help("Watch files for changes")
-                .takes_value(false)
+                .takes_value(false),
         )
         .arg(
             Arg::with_name("file_prefix")
                 .short("f")
                 .long("file_prefix")
                 .help("The prefix to search for to indicate a file contains tests")
-                .default_value("test_")
+                .default_value("test_"),
         )
         .arg(
             Arg::with_name("test_prefix")
                 .short("p")
                 .long("test_prefix")
                 .help("The prefix to search for to indicate a function is a test")
-                .default_value("test_")
+                .default_value("test_"),
         )
         .arg(
             Arg::with_name("verbose")
                 .short("v")
                 .long("verbose")
                 .help("Verbose output")
-                .takes_value(false)
+                .takes_value(false),
         )
         .get_matches();
 
@@ -93,7 +91,13 @@ pub fn run(config: Config) -> Rysult<()> {
 
     let _ = thread::spawn(move || {
         let tx_files = tx_files.clone();
-        find_files(config.files.clone(), config.file_prefix.as_str(), config.watch, tx_files).unwrap();
+        find_files(
+            config.files.clone(),
+            config.file_prefix.as_str(),
+            config.watch,
+            tx_files,
+        )
+        .unwrap();
     });
 
     let _ = thread::spawn(move || {
@@ -116,15 +120,23 @@ pub fn run(config: Config) -> Rysult<()> {
     Ok(())
 }
 
-pub fn find_files(paths: Vec<String>, prefix: &str, watch: bool, tx: mpsc::Sender<String>) -> Rysult<()> {
+pub fn find_files(
+    paths: Vec<String>,
+    prefix: &str,
+    watch: bool,
+    tx: mpsc::Sender<String>,
+) -> Rysult<()> {
     for path in &paths {
         for entry in glob(path.as_str())? {
             match entry {
                 Ok(p) => {
-                    if p.is_file() && p.file_stem().unwrap().to_string_lossy().starts_with(prefix) && p.extension().unwrap() == "py" {
+                    if p.is_file()
+                        && p.file_stem().unwrap().to_string_lossy().starts_with(prefix)
+                        && p.extension().unwrap() == "py"
+                    {
                         tx.send(p.to_str().unwrap().to_string())?;
                     }
-                },
+                }
                 Err(e) => println!("Error globbing: {}", e),
             }
         }
@@ -139,7 +151,11 @@ pub fn find_files(paths: Vec<String>, prefix: &str, watch: bool, tx: mpsc::Sende
     Ok(())
 }
 
-pub fn find_tests(prefix: String, rx: mpsc::Receiver<String>, tx: mpsc::Sender<TestCase>) -> Rysult<()> {
+pub fn find_tests(
+    prefix: String,
+    rx: mpsc::Receiver<String>,
+    tx: mpsc::Sender<TestCase>,
+) -> Rysult<()> {
     while let Ok(file_name) = rx.recv() {
         let mut data = String::new();
         let mut file = File::open(file_name.clone())?;
@@ -150,26 +166,24 @@ pub fn find_tests(prefix: String, rx: mpsc::Receiver<String>, tx: mpsc::Sender<T
             Ok(ast) => {
                 for stmt in ast {
                     match stmt {
-                        FunctionDef(node) if node.name.starts_with(&prefix) => tx.send(
-                            TestCase {
+                        FunctionDef(node) if node.name.starts_with(&prefix) => {
+                            tx.send(TestCase {
                                 file: file_name.clone(),
                                 test: node.name.to_string(),
                                 passed: false,
                                 error: None,
-                            }
-                        )?,
+                            })?
+                        }
                         _ => println!("{}: Skipping {:?}\n\n", file_name, stmt),
                     }
                 }
-            
-            },
+            }
             Err(e) => println!("Error parsing {}: {}", file_name, e),
         }
     }
 
     Ok(())
 }
-
 
 fn get_fixtures_for_dir(dir: &Path) -> Rysult<HashMap<String, Fixture>> {
     if !dir.is_dir() {
@@ -191,12 +205,18 @@ fn get_fixtures_for_dir(dir: &Path) -> Rysult<HashMap<String, Fixture>> {
             Ok(ast) => {
                 for stmt in ast {
                     match stmt {
-                        FunctionDef(node) if node.decorator_list.iter().any(|dec| dec.as_name_expr().unwrap().id == *"fixture") => println!("{:?}: Found function {:?}\n\n", dir, node),
+                        FunctionDef(node)
+                            if node
+                                .decorator_list
+                                .iter()
+                                .any(|dec| dec.as_name_expr().unwrap().id == *"fixture") =>
+                        {
+                            println!("{:?}: Found function {:?}\n\n", dir, node)
+                        }
                         _ => println!("{:?}: Skipping {:?}\n\n", dir, stmt),
                     }
                 }
-            
-            },
+            }
             Err(e) => println!("Error parsing {:?}: {}", dir, e),
         }
     }
@@ -204,9 +224,8 @@ fn get_fixtures_for_dir(dir: &Path) -> Rysult<HashMap<String, Fixture>> {
     Ok(fixtures)
 }
 
-
 pub fn run_tests(rx: mpsc::Receiver<TestCase>, tx: mpsc::Sender<TestCase>) -> Rysult<()> {
-    // let fixtures = HashMap::new(); 
+    // let fixtures = HashMap::new();
 
     while let Ok(mut test) = rx.recv() {
         let currrent_dir = env::current_dir().unwrap();
@@ -218,8 +237,14 @@ pub fn run_tests(rx: mpsc::Receiver<TestCase>, tx: mpsc::Sender<TestCase>) -> Ry
 
         let py_code = fs::read_to_string(path)?;
 
-        let result = Python::with_gil(|py| -> PyResult<Py<PyAny>>{
-            let syspath = py.import_bound("sys").unwrap().getattr("path").unwrap().downcast_into::<PyList>().unwrap();
+        let result = Python::with_gil(|py| -> PyResult<Py<PyAny>> {
+            let syspath = py
+                .import_bound("sys")
+                .unwrap()
+                .getattr("path")
+                .unwrap()
+                .downcast_into::<PyList>()
+                .unwrap();
             syspath.insert(0, path).unwrap();
 
             let module = PyModule::from_code_bound(py, &py_code, "", "")?;
@@ -243,13 +268,17 @@ pub fn run_tests(rx: mpsc::Receiver<TestCase>, tx: mpsc::Sender<TestCase>) -> Ry
     Ok(())
 }
 
-
 pub fn output_results(rx: mpsc::Receiver<TestCase>, verbose: bool) -> Rysult<()> {
     let mut passed = 0;
     let mut failed = 0;
 
     while let Ok(result) = rx.recv() {
-        println!("{}:{} - {}", result.file, result.test, if result.passed { "PASSED" } else { "FAILED" });
+        println!(
+            "{}:{} - {}",
+            result.file,
+            result.test,
+            if result.passed { "PASSED" } else { "FAILED" }
+        );
         if result.passed {
             passed += 1;
         } else {
@@ -259,7 +288,6 @@ pub fn output_results(rx: mpsc::Receiver<TestCase>, verbose: bool) -> Rysult<()>
                     println!("{}", error);
                 }
             }
-
         }
     }
 
