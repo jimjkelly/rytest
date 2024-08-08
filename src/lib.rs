@@ -169,16 +169,17 @@ pub fn find_tests(
                 for stmt in ast {
                     match stmt {
                         FunctionDef(node) if node.name.starts_with(&prefix) => {
-                            let is_pytest_fixture: bool = node.decorator_list.iter()
-                            .any(|decorator| {
-                                if decorator.is_attribute_expr() {
-                                    let attr_expr = decorator.as_attribute_expr().unwrap();
-                                    let module = attr_expr.value.as_name_expr().unwrap().id.as_str();
-                                    module == "pytest" && attr_expr.attr.as_str() == "fixture"
-                                } else {
-                                    false
-                                }
-                            });
+                            let is_pytest_fixture: bool =
+                                node.decorator_list.iter().any(|decorator| {
+                                    if decorator.is_attribute_expr() {
+                                        let attr_expr = decorator.as_attribute_expr().unwrap();
+                                        let module =
+                                            attr_expr.value.as_name_expr().unwrap().id.as_str();
+                                        module == "pytest" && attr_expr.attr.as_str() == "fixture"
+                                    } else {
+                                        false
+                                    }
+                                });
                             if !is_pytest_fixture {
                                 tx.send(TestCase {
                                     file: file_name.clone(),
