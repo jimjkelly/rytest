@@ -174,11 +174,7 @@ pub fn find_tests(
                                 if decorator.is_attribute_expr() {
                                     let attr_expr = decorator.as_attribute_expr().unwrap();
                                     let module = attr_expr.value.as_name_expr().unwrap().id.as_str();
-                                    if module == "pytest" && attr_expr.attr.as_str() == "fixture" {
-                                        true
-                                    } else {
-                                        false
-                                    }
+                                    module == "pytest" && attr_expr.attr.as_str() == "fixture"
                                 } else {
                                     false
                                 }
