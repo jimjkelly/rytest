@@ -5,14 +5,12 @@ use std::sync::mpsc::{self};
 use std::thread;
 use std::time::Instant;
 
-mod collection;
-mod execution;
-mod reporting;
+mod phases;
 mod structs;
 
-pub use crate::collection::{find_files, find_tests};
-pub use crate::execution::run_tests;
-pub use crate::reporting::{output_collect, output_results};
+pub use crate::phases::collection;
+pub use crate::phases::execution;
+pub use crate::phases::reporting;
 pub use crate::structs::{Config, TestCase};
 
 pub fn get_args() -> Result<Config> {
@@ -73,12 +71,13 @@ pub fn run(config: Config) -> Result<()> {
 
     let _ = thread::spawn(move || {
         let tx_files = tx_files.clone();
-        find_files(config.files.clone(), config.file_prefix.as_str(), tx_files).unwrap();
+        collection::find_files(config.files.clone(), config.file_prefix.as_str(), tx_files)
+            .unwrap();
     });
 
     let _ = thread::spawn(move || {
         let tx_tests = tx_tests.clone();
-        find_tests(
+        collection::find_tests(
             config.test_prefix.clone(),
             config.verbose,
             rx_files,
@@ -92,17 +91,17 @@ pub fn run(config: Config) -> Result<()> {
 
         let _ = thread::spawn(move || {
             let tx_results = tx_results.clone();
-            run_tests(rx_tests, tx_results).unwrap();
+            execution::run_tests(rx_tests, tx_results).unwrap();
         });
 
         let handle_output = thread::spawn(move || {
             let rx_results = rx_results;
-            output_results(rx_results, start, config.verbose).unwrap();
+            reporting::output_results(rx_results, start, config.verbose).unwrap();
         });
         handle_output.join().unwrap();
     } else {
         let handle_output = thread::spawn(move || {
-            output_collect(rx_tests, start).unwrap();
+            reporting::output_collect(rx_tests, start).unwrap();
         });
         handle_output.join().unwrap();
     }

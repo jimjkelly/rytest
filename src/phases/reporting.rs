@@ -1,4 +1,3 @@
-
 use anyhow::Result;
 use std::{sync::mpsc, time::Instant};
 
@@ -38,11 +37,7 @@ pub fn output_collect(rx: mpsc::Receiver<TestCase>, start: Instant) -> Result<()
     Ok(())
 }
 
-pub fn output_results(
-    rx: mpsc::Receiver<TestCase>,
-    start: Instant,
-    verbose: bool,
-) -> Result<()> {
+pub fn output_results(rx: mpsc::Receiver<TestCase>, start: Instant, verbose: bool) -> Result<()> {
     let mut passed = 0;
     let mut failed = 0;
 

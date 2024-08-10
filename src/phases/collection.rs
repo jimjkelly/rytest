@@ -1,4 +1,3 @@
-
 use anyhow::Result;
 use glob::glob;
 use pyo3::exceptions::PySyntaxError;
@@ -55,8 +54,7 @@ pub fn find_tests(
                                         let attr_expr = decorator.as_attribute_expr().unwrap();
                                         let module =
                                             attr_expr.value.as_name_expr().unwrap().id.as_str();
-                                        module == "pytest"
-                                            && attr_expr.attr.as_str() == "fixture"
+                                        module == "pytest" && attr_expr.attr.as_str() == "fixture"
                                     } else {
                                         false
                                     }

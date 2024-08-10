@@ -1,4 +1,3 @@
-
 use pyo3::PyErr;
 
 pub struct Config {
@@ -15,4 +14,3 @@ pub struct TestCase {
     pub passed: bool,
     pub error: Option<PyErr>,
 }
-

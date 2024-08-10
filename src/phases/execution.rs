@@ -1,4 +1,3 @@
-
 use anyhow::Result;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
@@ -45,4 +44,3 @@ pub fn run_tests(rx: mpsc::Receiver<TestCase>, tx: mpsc::Sender<TestCase>) -> Re
 
     Ok(())
 }
-
