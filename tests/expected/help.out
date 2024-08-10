@@ -1,0 +1,18 @@
+rytest 0.1.0
+rytest is a reasonably fast, somewhat Pytest compatible Python test runner.
+
+USAGE:
+    rytest [FLAGS] [OPTIONS] [FILE]...
+
+FLAGS:
+        --collect-only    only collect tests, don't run them
+    -h, --help            Prints help information
+    -V, --version         Prints version information
+    -v, --verbose         Verbose output
+
+OPTIONS:
+    -f, --file-prefix <file_prefix>    The prefix to search for to indicate a file contains tests [default: test_]
+    -p, --test-prefix <test_prefix>    The prefix to search for to indicate a function is a test [default: test_]
+
+ARGS:
+    <FILE>...    Input file(s) [default: -]

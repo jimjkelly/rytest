@@ -17,6 +17,11 @@ fn run(args: &[&str], expected_file: &str) -> TestResult {
 }
 
 #[test]
+fn help() -> TestResult {
+    run(&["--help"], "tests/expected/help.out")
+}
+
+#[test]
 fn collect_errors() -> TestResult {
     run(
         &["tests/**/*.py", "--collect-only"],
