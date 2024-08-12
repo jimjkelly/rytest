@@ -35,25 +35,3 @@ cargo test
 ```
 
 These will all be run in CI to validate your code.
-
-## Misc
-
-python 3.12
-
-Goals:
-
-Fast
-pytest compatibility mode
-inspiration from more ergonomic test runner UX such as Jest.
-
-Structure:
-
-Pipeline of:
-
-gather
-test
-results
-
-
-add out of the box tracing
-- cardinality guard
