@@ -1,0 +1,36 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "rytest"
+description = "rytest is a reasonably fast, somewhat Pytest compatible Python test runner."
+readme = "README.md"
+keywords = ["test", "testing"]
+license = {file = "LICENSE"}
+authors = [
+    {name = "Jim Kelly"},
+    {name = "Aatish Neupane"}
+]
+requires-python = ">=3.11"
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Rust",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Utilities",
+]
+dynamic = [
+    "version",
+]
+urls.Source = "https://github.com/jimjkelly/rytest"
+urls.Tracker = "https://github.com/jimjkelly/rytest/issues"
