@@ -9,6 +9,8 @@ use std::{fs::File, sync::mpsc};
 
 use crate::TestCase;
 
+use crate::phases::collectors::ignore_test;
+
 pub fn find_files(paths: Vec<String>, prefix: &str, tx: mpsc::Sender<String>) -> Result<()> {
     for path in &paths {
         for entry in glob(path.as_str())? {
@@ -47,18 +49,9 @@ pub fn find_tests(
             Ok(ast) => {
                 for stmt in ast {
                     match stmt {
-                        FunctionDef(node) if node.name.starts_with(&prefix) => {
+                        FunctionDef(ref node) if node.name.starts_with(&prefix) => {
                             let is_pytest_fixture: bool =
-                                node.decorator_list.iter().any(|decorator| {
-                                    if decorator.is_attribute_expr() {
-                                        let attr_expr = decorator.as_attribute_expr().unwrap();
-                                        let module =
-                                            attr_expr.value.as_name_expr().unwrap().id.as_str();
-                                        module == "pytest" && attr_expr.attr.as_str() == "fixture"
-                                    } else {
-                                        false
-                                    }
-                                });
+                                ignore_test::is_pytest_fixture(stmt.clone());
                             if !is_pytest_fixture {
                                 tx.send(TestCase {
                                     file: file_name.clone(),
