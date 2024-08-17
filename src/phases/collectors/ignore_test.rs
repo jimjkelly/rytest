@@ -46,7 +46,7 @@ mod tests {
         ";
         let ast = ast::Suite::parse(code, "<embedded>");
         let result = is_pytest_fixture(ast.unwrap().first().take().unwrap().clone());
-        assert_eq!(false, result);
+        assert!(!result);
     }
 
     #[test]
@@ -58,7 +58,7 @@ mod tests {
         "};
         let ast = ast::Suite::parse(code, "<embedded>");
         let result = is_pytest_fixture(ast.unwrap().first().take().unwrap().clone());
-        assert_eq!(true, result);
+        assert!(result);
     }
 
     #[test]
@@ -70,6 +70,6 @@ mod tests {
         "};
         let ast = ast::Suite::parse(code, "<embedded>");
         let result = is_pytest_fixture(ast.unwrap().first().take().unwrap().clone());
-        assert_eq!(true, result);
+        assert!(result);
     }
 }
