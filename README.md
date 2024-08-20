@@ -5,7 +5,7 @@ rytest is a reasonably fast, somewhat Pytest compatible Python test runner.
 Note that this is under heavy development, and will not do anything for all
 but the simplest of test suites.
 
-## Running Tests
+## Usage
 
 The simple version is:
 
@@ -22,6 +22,23 @@ To test against our local test fixtures, run:
 ```bash
 cargo run -- tests/**/*.py -v
 ```
+
+### Running the Test Suite
+
+To run the test suite, run:
+
+```bash
+cargo test
+```
+
+We make use of the `insta` crate for snapshot testing. If you need to update snapshots, run:
+
+```bash
+cargo install cargo-insta
+cargo insta review
+```
+
+For more information, check out the [documentation](https://insta.rs/docs/cli/).
 
 ## Contributing
 
