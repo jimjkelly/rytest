@@ -14,13 +14,18 @@ notify = "6.1.1"
 rustpython-parser = "0.3.1"
 
 [dev-dependencies]
-assert_cmd = "2"
+insta = { version = "1.39.0", features = ["yaml"] }
+insta-cmd = "0.6.0"
 predicates = "2"
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
 inherits = "release"
 lto = "thin"
+
+# Makes insta faster
+[profile.dev.package]
+insta.opt-level = 3
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]

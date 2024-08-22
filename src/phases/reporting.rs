@@ -14,7 +14,7 @@ pub fn output_collect(rx: mpsc::Receiver<TestCase>, start: Instant) -> Result<()
                 errors += 1
             }
             None => {
-                println!("{}:{}", test.file, test.name);
+                println!("{}::{}", test.file, test.name);
                 collected += 1;
             }
         }
@@ -43,7 +43,7 @@ pub fn output_results(rx: mpsc::Receiver<TestCase>, start: Instant, verbose: boo
 
     while let Ok(result) = rx.recv() {
         println!(
-            "{}:{} - {}",
+            "{}::{} - {}",
             result.file,
             result.name,
             if result.passed { "PASSED" } else { "FAILED" }
