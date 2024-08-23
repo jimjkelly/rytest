@@ -22,11 +22,12 @@ pub fn run_tests(rx: mpsc::Receiver<TestCase>, tx: mpsc::Sender<TestCase>) -> Re
                 .unwrap()
                 .downcast_into::<PyList>()
                 .unwrap();
+
             syspath.insert(0, path).unwrap();
 
             let module = PyModule::from_code_bound(py, &py_code, "", "")?;
-            let app: Py<PyAny> = module.getattr(test.name.as_str())?.into();
-            app.call0(py)
+            let function: Py<PyAny> = module.getattr(test.name.as_str())?.into();
+            function.call0(py)
         });
 
         test.passed = result.is_ok();

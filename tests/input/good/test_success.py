@@ -1,7 +1,7 @@
-
+from tests.input.good.utils import assert_true
 
 def test_success():
-    assert True
+    assert assert_true(True)
 
 
 def test_more_success():
