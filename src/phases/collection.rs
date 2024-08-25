@@ -160,14 +160,11 @@ mod tests {
             "tests/input/test_bad_file.py".to_string(),
             "tests/input/good/test_success.py".to_string(),
             "tests/input/test_file.py".to_string(),
-            "tests/input/test_fixtures.py".to_string()
+            "tests/input/test_fixtures.py".to_string(),
         ];
         expected.sort();
 
-        assert_eq!(
-            files,
-            expected
-        );
+        assert_eq!(files, expected);
     }
 
     #[test]
@@ -187,14 +184,11 @@ mod tests {
             "tests/input/test_bad_file.py".to_string(),
             "tests/input/good/test_success.py".to_string(),
             "tests/input/test_file.py".to_string(),
-            "tests/input/test_fixtures.py".to_string()
+            "tests/input/test_fixtures.py".to_string(),
         ];
         expected.sort();
 
-        assert_eq!(
-            files,
-            expected
-        );
+        assert_eq!(files, expected);
     }
 
     #[test]
@@ -214,14 +208,11 @@ mod tests {
             "tests/input/test_bad_file.py".to_string(),
             "tests/input/good/test_success.py".to_string(),
             "tests/input/test_file.py".to_string(),
-            "tests/input/test_fixtures.py".to_string()
+            "tests/input/test_fixtures.py".to_string(),
         ];
         expected.sort();
 
-        assert_eq!(
-            files,
-            expected
-        );
+        assert_eq!(files, expected);
     }
 
     #[test]
@@ -243,10 +234,7 @@ mod tests {
         ];
         expected.sort();
 
-        assert_eq!(
-            files,
-            expected
-        );
+        assert_eq!(files, expected);
     }
 
     #[test]
@@ -266,14 +254,11 @@ mod tests {
             "tests/input/test_bad_file.py".to_string(),
             "tests/input/good/test_success.py".to_string(),
             "tests/input/test_file.py".to_string(),
-            "tests/input/test_fixtures.py".to_string()
+            "tests/input/test_fixtures.py".to_string(),
         ];
         expected.sort();
 
-        assert_eq!(
-            files,
-            expected
-        );
+        assert_eq!(files, expected);
     }
 
     #[test]
