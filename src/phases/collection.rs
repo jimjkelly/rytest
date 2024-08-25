@@ -1,11 +1,11 @@
 use anyhow::Result;
-use glob::glob;
 use pyo3::exceptions::PySyntaxError;
 use pyo3::PyErr;
 use rustpython_parser::ast::Stmt::{self, ClassDef, FunctionDef};
 use rustpython_parser::{ast, Parse};
 use std::io::Read;
 use std::{fs::File, sync::mpsc};
+use walkdir::WalkDir;
 
 use crate::TestCase;
 
@@ -13,17 +13,20 @@ use crate::phases::collectors::ignore_test;
 
 pub fn find_files(paths: Vec<String>, prefix: &str, tx: mpsc::Sender<String>) -> Result<()> {
     for path in &paths {
-        for entry in glob(path.as_str())? {
-            match entry {
-                Ok(p) => {
-                    if p.is_file()
-                        && p.file_stem().unwrap().to_string_lossy().starts_with(prefix)
-                        && p.extension().unwrap() == "py"
-                    {
-                        tx.send(p.to_str().unwrap().to_string())?;
-                    }
-                }
-                Err(e) => println!("Error globbing: {}", e),
+        for entry in WalkDir::new(path)
+            .into_iter()
+            .filter_map(Result::ok)
+            .filter(|e| !e.file_type().is_dir())
+        {
+            let p = if matches!(path.as_str(), "." | "./") {
+                entry.path().strip_prefix("./")?
+            } else {
+                entry.path()
+            };
+            if p.file_stem().unwrap().to_string_lossy().starts_with(prefix)
+                && p.extension().unwrap() == "py"
+            {
+                tx.send(p.to_str().unwrap().to_string())?;
             }
         }
     }
@@ -135,7 +138,123 @@ fn find_unittest_class_cases(
 mod tests {
     use ast::{text_size::TextRange, EmptyRange, Expr, Identifier, TextSize};
 
+    #[cfg(test)]
+    use pretty_assertions::assert_eq;
+
     use super::*;
+
+    #[test]
+    fn test_find_files() {
+        let paths = vec!["tests".to_string()];
+        let prefix = "test_".to_string();
+        let (tx, rx) = mpsc::channel();
+        let _ = find_files(paths, prefix.as_str(), tx);
+        let files: Vec<String> = rx.iter().collect();
+
+        assert_eq!(
+            files,
+            vec![
+                "tests/input/classes/test_classes.py".to_string(),
+                "tests/input/bad/test_other_error.py".to_string(),
+                "tests/input/bad/test_other_file.py".to_string(),
+                "tests/input/folder/test_another_file.py".to_string(),
+                "tests/input/test_bad_file.py".to_string(),
+                "tests/input/good/test_success.py".to_string(),
+                "tests/input/test_file.py".to_string(),
+                "tests/input/test_fixtures.py".to_string()
+            ]
+        );
+    }
+
+    #[test]
+    fn test_find_files_no_dir() {
+        let paths = vec![".".to_string()];
+        let prefix = "test_".to_string();
+        let (tx, rx) = mpsc::channel();
+        let _ = find_files(paths, prefix.as_str(), tx);
+        let files: Vec<String> = rx.iter().collect();
+
+        assert_eq!(
+            files,
+            vec![
+                "tests/input/classes/test_classes.py".to_string(),
+                "tests/input/bad/test_other_error.py".to_string(),
+                "tests/input/bad/test_other_file.py".to_string(),
+                "tests/input/folder/test_another_file.py".to_string(),
+                "tests/input/test_bad_file.py".to_string(),
+                "tests/input/good/test_success.py".to_string(),
+                "tests/input/test_file.py".to_string(),
+                "tests/input/test_fixtures.py".to_string()
+            ]
+        );
+    }
+
+    #[test]
+    fn test_find_files_this_dir() {
+        let paths = vec!["./".to_string()];
+        let prefix = "test_".to_string();
+        let (tx, rx) = mpsc::channel();
+        let _ = find_files(paths, prefix.as_str(), tx);
+        let files: Vec<String> = rx.iter().collect();
+
+        assert_eq!(
+            files,
+            vec![
+                "tests/input/classes/test_classes.py".to_string(),
+                "tests/input/bad/test_other_error.py".to_string(),
+                "tests/input/bad/test_other_file.py".to_string(),
+                "tests/input/folder/test_another_file.py".to_string(),
+                "tests/input/test_bad_file.py".to_string(),
+                "tests/input/good/test_success.py".to_string(),
+                "tests/input/test_file.py".to_string(),
+                "tests/input/test_fixtures.py".to_string()
+            ]
+        );
+    }
+
+    #[test]
+    fn test_find_files_two_dirs() {
+        let paths = vec![
+            "tests/input/bad".to_string(),
+            "tests/input/good".to_string(),
+        ];
+        let prefix = "test_".to_string();
+        let (tx, rx) = mpsc::channel();
+        let _ = find_files(paths, prefix.as_str(), tx);
+        let files: Vec<String> = rx.iter().collect();
+
+        assert_eq!(
+            files,
+            vec![
+                "tests/input/bad/test_other_error.py".to_string(),
+                "tests/input/bad/test_other_file.py".to_string(),
+                "tests/input/good/test_success.py".to_string(),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_find_files_specific_dir() {
+        let paths = vec!["tests/input".to_string()];
+        let prefix = "test_".to_string();
+        let (tx, rx) = mpsc::channel();
+        let _ = find_files(paths, prefix.as_str(), tx);
+        let files: Vec<String> = rx.iter().collect();
+
+        assert_eq!(
+            files,
+            vec![
+                "tests/input/classes/test_classes.py".to_string(),
+                "tests/input/bad/test_other_error.py".to_string(),
+                "tests/input/bad/test_other_file.py".to_string(),
+                "tests/input/folder/test_another_file.py".to_string(),
+                "tests/input/test_bad_file.py".to_string(),
+                "tests/input/good/test_success.py".to_string(),
+                "tests/input/test_file.py".to_string(),
+                "tests/input/test_fixtures.py".to_string()
+            ]
+        );
+    }
 
     #[test]
     fn test_find_unittest_base() {

@@ -28,7 +28,7 @@ fn help() {
         -p, --test-prefix <test_prefix>    The prefix to search for to indicate a function is a test [default: test_]
 
     ARGS:
-        <FILE>...    Input file(s) [default: -]
+        <FILE>...    Input file(s) [default: .]
 
     ----- stderr -----
     "###);
@@ -36,21 +36,21 @@ fn help() {
 
 #[test]
 fn collect_errors() {
-    assert_cmd_snapshot!(cli().arg("tests/**/*.py").arg("--collect-only"), @r###"
+    assert_cmd_snapshot!(cli().arg("tests").arg("--collect-only"), @r###"
     success: true
     exit_code: 0
     ----- stdout -----
-    ERROR tests/input/bad/test_other_error.py
-    tests/input/bad/test_other_file.py::test_function_passes
-    tests/input/bad/test_other_file.py::test_function_fails
     tests/input/classes/test_classes.py::SomeTest::test_something
     tests/input/classes/test_classes.py::SomeTest::test_something_else
     tests/input/classes/test_classes.py::SomeTest::test_assert_failure
+    ERROR tests/input/bad/test_other_error.py
+    tests/input/bad/test_other_file.py::test_function_passes
+    tests/input/bad/test_other_file.py::test_function_fails
     tests/input/folder/test_another_file.py::test_another_function
     tests/input/folder/test_another_file.py::test_function_with_decorator
+    ERROR tests/input/test_bad_file.py
     tests/input/good/test_success.py::test_success
     tests/input/good/test_success.py::test_more_success
-    ERROR tests/input/test_bad_file.py
     tests/input/test_file.py::test_function_passes
     tests/input/test_file.py::test_function_fails
     tests/input/test_fixtures.py::test_fixture
@@ -62,7 +62,7 @@ fn collect_errors() {
 
 #[test]
 fn collect_error() {
-    assert_cmd_snapshot!(cli().arg("tests/input/bad/*.py").arg("--collect-only"), @r###"
+    assert_cmd_snapshot!(cli().arg("tests/input/bad").arg("--collect-only"), @r###"
     success: true
     exit_code: 0
     ----- stdout -----
@@ -77,7 +77,7 @@ fn collect_error() {
 
 #[test]
 fn collect() {
-    assert_cmd_snapshot!(cli().arg("tests/input/good/*.py").arg("--collect-only"), @r###"
+    assert_cmd_snapshot!(cli().arg("tests/input/good").arg("--collect-only"), @r###"
     success: true
     exit_code: 0
     ----- stdout -----

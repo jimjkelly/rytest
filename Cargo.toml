@@ -9,14 +9,15 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.86"
 clap = "2.33.3"
-glob = "0.3.1"
 notify = "6.1.1"
 rustpython-parser = "0.3.1"
+walkdir = "2.5.0"
 
 [dev-dependencies]
 insta = { version = "1.39.0", features = ["yaml"] }
 insta-cmd = "0.6.0"
 predicates = "2"
+pretty_assertions = "1.4.0"
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
