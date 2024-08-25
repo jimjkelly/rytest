@@ -12,7 +12,6 @@ fn setup() -> insta::Settings {
     settings
 }
 
-
 #[test]
 fn help() {
     let settings = setup();
@@ -48,7 +47,8 @@ fn help() {
 fn collect_errors() {
     let settings = setup();
 
-    settings.bind(|| assert_cmd_snapshot!(cli().arg("tests").arg("--collect-only"), @r###"
+    settings.bind(|| {
+        assert_cmd_snapshot!(cli().arg("tests").arg("--collect-only"), @r###"
                      success: true
                      exit_code: 0
                      ----- stdout -----
@@ -69,14 +69,16 @@ fn collect_errors() {
                      12 tests collected, 2 errors in <TIME>s
 
                      ----- stderr -----
-                     "###));
+                     "###)
+    });
 }
 
 #[test]
 fn collect_error() {
     let settings = setup();
 
-    settings.bind(|| assert_cmd_snapshot!(cli().arg("tests/input/bad").arg("--collect-only"), @r###"
+    settings.bind(|| {
+        assert_cmd_snapshot!(cli().arg("tests/input/bad").arg("--collect-only"), @r###"
                      success: true
                      exit_code: 0
                      ----- stdout -----
@@ -86,14 +88,16 @@ fn collect_error() {
                      2 tests collected, 1 error in <TIME>s
 
                      ----- stderr -----
-                     "###));
+                     "###)
+    });
 }
 
 #[test]
 fn collect() {
     let settings = setup();
 
-    settings.bind(|| assert_cmd_snapshot!(cli().arg("tests/input/good").arg("--collect-only"), @r###"
+    settings.bind(|| {
+        assert_cmd_snapshot!(cli().arg("tests/input/good").arg("--collect-only"), @r###"
                      success: true
                      exit_code: 0
                      ----- stdout -----
@@ -102,5 +106,6 @@ fn collect() {
                      2 tests collected in <TIME>s
 
                      ----- stderr -----
-                     "###));
+                     "###)
+    });
 }
