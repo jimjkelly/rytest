@@ -49,27 +49,27 @@ fn collect_errors() {
 
     settings.bind(|| {
         assert_cmd_snapshot!(cli().arg("tests").arg("--collect-only"), @r###"
-                     success: true
-                     exit_code: 0
-                     ----- stdout -----
-                     tests/input/classes/test_classes.py::SomeTest::test_something
-                     tests/input/classes/test_classes.py::SomeTest::test_something_else
-                     tests/input/classes/test_classes.py::SomeTest::test_assert_failure
-                     ERROR tests/input/bad/test_other_error.py
-                     tests/input/bad/test_other_file.py::test_function_passes
-                     tests/input/bad/test_other_file.py::test_function_fails
-                     tests/input/folder/test_another_file.py::test_another_function
-                     tests/input/folder/test_another_file.py::test_function_with_decorator
-                     ERROR tests/input/test_bad_file.py
-                     tests/input/good/test_success.py::test_success
-                     tests/input/good/test_success.py::test_more_success
-                     tests/input/test_file.py::test_function_passes
-                     tests/input/test_file.py::test_function_fails
-                     tests/input/test_fixtures.py::test_fixture
-                     12 tests collected, 2 errors in <TIME>s
+        success: true
+        exit_code: 0
+        ----- stdout -----
+        ERROR tests/input/bad/test_other_error.py
+        tests/input/bad/test_other_file.py::test_function_passes
+        tests/input/bad/test_other_file.py::test_function_fails
+        tests/input/classes/test_classes.py::SomeTest::test_something
+        tests/input/classes/test_classes.py::SomeTest::test_something_else
+        tests/input/classes/test_classes.py::SomeTest::test_assert_failure
+        tests/input/folder/test_another_file.py::test_another_function
+        tests/input/folder/test_another_file.py::test_function_with_decorator
+        tests/input/good/test_success.py::test_success
+        tests/input/good/test_success.py::test_more_success
+        ERROR tests/input/test_bad_file.py
+        tests/input/test_file.py::test_function_passes
+        tests/input/test_file.py::test_function_fails
+        tests/input/test_fixtures.py::test_fixture
+        12 tests collected, 2 errors in <TIME>s
 
-                     ----- stderr -----
-                     "###)
+        ----- stderr -----
+        "###)
     });
 }
 

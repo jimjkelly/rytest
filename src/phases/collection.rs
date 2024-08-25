@@ -14,6 +14,7 @@ use crate::phases::collectors::ignore_test;
 pub fn find_files(paths: Vec<String>, prefix: &str, tx: mpsc::Sender<String>) -> Result<()> {
     for path in &paths {
         for entry in WalkDir::new(path)
+            .sort_by_file_name()
             .into_iter()
             .filter_map(Result::ok)
             .filter(|e| !e.file_type().is_dir())
