@@ -1,4 +1,0 @@
-ERROR tests/input/bad/test_other_error.py
-tests/input/bad/test_other_file.py:test_function_passes
-tests/input/bad/test_other_file.py:test_function_fails
-2 tests collected, 1 error in 0.00s

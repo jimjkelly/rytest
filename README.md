@@ -10,7 +10,7 @@ but the simplest of test suites.
 The simple version is:
 
 ```bash
-$ rytest tests/**/*.py 
+$ rytest tests
 ```
 
 This will run tests in any python file in the `tests` directory that starts with `test_`.
@@ -20,7 +20,7 @@ This will run tests in any python file in the `tests` directory that starts with
 To test against our local test fixtures, run:
 
 ```bash
-cargo run -- tests/**/*.py -v
+cargo run -- tests -v
 ```
 
 ### Running the Test Suite

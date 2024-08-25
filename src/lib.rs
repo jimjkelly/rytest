@@ -42,7 +42,7 @@ pub fn get_args() -> Result<Config> {
             Arg::with_name("files")
                 .value_name("FILE")
                 .help("Input file(s)")
-                .default_value("-")
+                .default_value(".")
                 .min_values(1),
         )
         .arg(
@@ -71,8 +71,7 @@ pub fn run(config: Config) -> Result<()> {
 
     let _ = thread::spawn(move || {
         let tx_files = tx_files.clone();
-        collection::find_files(config.files.clone(), config.file_prefix.as_str(), tx_files)
-            .unwrap();
+        collection::find_files(config.files, config.file_prefix.as_str(), tx_files).unwrap();
     });
 
     let _ = thread::spawn(move || {
