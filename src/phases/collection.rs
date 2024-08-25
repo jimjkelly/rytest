@@ -11,6 +11,8 @@ use crate::TestCase;
 
 use crate::phases::collectors::ignore_test;
 
+use super::collectors::ignore_skip;
+
 pub fn find_files(paths: Vec<String>, prefix: &str, tx: mpsc::Sender<String>) -> Result<()> {
     for path in &paths {
         for entry in WalkDir::new(path)
@@ -55,6 +57,7 @@ pub fn find_tests(
                     match stmt {
                         FunctionDef(ref node)
                             if node.name.starts_with(&prefix)
+                                && !ignore_skip::is_pytest_skip(stmt.clone())
                                 && !ignore_test::is_pytest_fixture(stmt.clone()) =>
                         {
                             tx.send(TestCase {

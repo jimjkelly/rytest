@@ -11,3 +11,11 @@ def test_function_passes():
 
 def test_function_fails():
     assert utility_function() != 1
+
+@pytest.mark.skip
+def test_function_skipped():
+    assert utility_function() == 2
+
+@pytest.mark.skip(reason="does not work")
+def test_function_skipped_reason():
+    assert utility_function() == 2
