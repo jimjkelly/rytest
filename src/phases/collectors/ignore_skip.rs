@@ -17,7 +17,7 @@ pub fn is_pytest_skip(stmt: Stmt) -> bool {
                                     && attr_expr.attr.as_str() == "skip"
                             }
                             None => false,
-                        }
+                        },
                         None => false,
                     },
                     None => false,
