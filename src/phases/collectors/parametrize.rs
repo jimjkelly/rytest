@@ -40,12 +40,25 @@ pub fn expand_parameters(stmt: Stmt) -> Option<Vec<String>> {
                                         call.args[0].clone().constant_expr().unwrap().clone();
                                     let parameters = const_expr.value.as_str().unwrap();
                                     let values = call.args[1].clone();
-                                    let parameter_call_args = values.list_expr().unwrap().elts;
-                                    parameterizations.extend(generate_parameter_ids(
-                                        node.name.as_str(),
-                                        parameters,
-                                        parameter_call_args.len(),
-                                    ))
+                                    match values {
+                                        ast::Expr::Tuple(tuple) => {
+                                            parameterizations.extend(generate_parameter_ids(
+                                                node.name.as_str(),
+                                                parameters,
+                                                tuple.elts.len(),
+                                            ))
+                                        }
+
+                                        ast::Expr::List(list) => {
+                                            parameterizations.extend(generate_parameter_ids(
+                                                node.name.as_str(),
+                                                parameters,
+                                                list.elts.len(),
+                                            ))
+                                        }
+
+                                        _ => panic!("Invalid parameterization"),
+                                    }
                                 }
                             }
                         }
@@ -105,6 +118,26 @@ mod tests {
     fn it_works_with_single_parameterized_test_multiple_args() {
         let code = indoc! {"
             @pytest.mark.parametrize('a, b', [(1, 2), (2, 3), (3, 4)])
+            def test_parameterized():
+                pass
+        "};
+        let ast = ast::Suite::parse(code, "<embedded>");
+        let result = expand_parameters(ast.unwrap().first().take().unwrap().clone());
+        assert!(result.is_some());
+        assert_eq!(
+            result.unwrap(),
+            vec![
+                "test_parameterized[a0-b0]",
+                "test_parameterized[a1-b1]",
+                "test_parameterized[a2-b2]"
+            ]
+        );
+    }
+
+    #[test]
+    fn it_works_with_single_parameterized_test_multiple_args_tuple() {
+        let code = indoc! {"
+            @pytest.mark.parametrize('a, b', ((1, 2), (2, 3), (3, 4)))
             def test_parameterized():
                 pass
         "};
