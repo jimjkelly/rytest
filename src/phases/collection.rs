@@ -12,6 +12,7 @@ use crate::TestCase;
 use crate::phases::collectors::ignore_test;
 
 use super::collectors::ignore_skip;
+use super::collectors::parametrize;
 
 pub fn find_files(paths: Vec<String>, prefix: &str, tx: mpsc::Sender<String>) -> Result<()> {
     for path in &paths {
@@ -60,12 +61,18 @@ pub fn find_tests(
                                 && !ignore_skip::is_pytest_skip(stmt.clone())
                                 && !ignore_test::is_pytest_fixture(stmt.clone()) =>
                         {
-                            tx.send(TestCase {
-                                file: file_name.clone(),
-                                name: node.name.to_string(),
-                                passed: false,
-                                error: None,
-                            })?
+                            parametrize::expand_parameters(stmt.clone())
+                                .unwrap_or_default()
+                                .iter()
+                                .for_each(|test| {
+                                    tx.send(TestCase {
+                                        file: file_name.clone(),
+                                        name: test.to_string(),
+                                        passed: false,
+                                        error: None,
+                                    })
+                                    .unwrap()
+                                });
                         }
                         ClassDef(node) if node.bases.iter().any(find_unittest_base) => {
                             let cases = find_unittest_class_cases(

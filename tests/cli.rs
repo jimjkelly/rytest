@@ -65,8 +65,10 @@ fn collect_errors() {
         ERROR tests/input/test_bad_file.py
         tests/input/test_file.py::test_function_passes
         tests/input/test_file.py::test_function_fails
+        tests/input/test_file.py::test_parameterized[a0-b0]
+        tests/input/test_file.py::test_parameterized[a1-b1]
         tests/input/test_fixtures.py::test_fixture
-        12 tests collected, 2 errors in <TIME>s
+        14 tests collected, 2 errors in <TIME>s
 
         ----- stderr -----
         "###)
