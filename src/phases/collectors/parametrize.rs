@@ -164,11 +164,6 @@ mod tests {
         let ast = ast::Suite::parse(code, "<embedded>");
         let result = expand_parameters(ast.unwrap().first().take().unwrap().clone());
         assert!(result.is_some());
-        assert_eq!(
-            result.unwrap(),
-            vec![
-                "test_parameterized",
-            ]
-        );
+        assert_eq!(result.unwrap(), vec!["test_parameterized",]);
     }
 }
