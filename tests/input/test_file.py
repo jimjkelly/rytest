@@ -19,3 +19,8 @@ def test_function_skipped():
 @pytest.mark.skip(reason="does not work")
 def test_function_skipped_reason():
     assert utility_function() == 2
+
+
+@pytest.mark.parametrize('a,b', [(1, 2), (3, 4)])
+def test_parameterized(a, b):
+    assert a < b
