@@ -57,7 +57,7 @@ pub fn expand_parameters(stmt: Stmt) -> Option<Vec<String>> {
                                             ))
                                         }
 
-                                        _ => panic!("Invalid parameterization"),
+                                        _ => println!("Unsupported parameterization {:#?}", values),
                                     }
                                 }
                             }
@@ -152,5 +152,18 @@ mod tests {
                 "test_parameterized[a2-b2]"
             ]
         );
+    }
+
+    #[test]
+    fn it_doesnt_blow_up_on_weird_stuff() {
+        let code = indoc! {"
+            @pytest.mark.parametrize('a', [foo for foo in range(10)])
+            def test_parameterized(a):
+                pass
+        "};
+        let ast = ast::Suite::parse(code, "<embedded>");
+        let result = expand_parameters(ast.unwrap().first().take().unwrap().clone());
+        assert!(result.is_some());
+        assert_eq!(result.unwrap(), vec!["test_parameterized",]);
     }
 }
