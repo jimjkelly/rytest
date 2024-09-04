@@ -27,7 +27,11 @@ pub fn run_tests(rx: mpsc::Receiver<TestCase>, tx: mpsc::Sender<TestCase>) -> Re
 
             let module = PyModule::from_code_bound(py, &py_code, "", "")?;
             let function: Py<PyAny> = module.getattr(test.name.as_str())?.into();
-            function.call0(py)
+            let mut result = function.call0(py);
+            let py_list: &PyList = result.as_mut().unwrap().extract(py)?;
+            println!("{}: {:#?}", test.name, py_list);
+            result
+
         });
 
         test.passed = result.is_ok();
