@@ -1,4 +1,5 @@
 use anyhow::Result;
+use pyo3::indoc::indoc;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
 use std::{env, fs, path::Path, sync::mpsc};
@@ -44,4 +45,67 @@ pub fn run_tests(rx: mpsc::Receiver<TestCase>, tx: mpsc::Sender<TestCase>) -> Re
     }
 
     Ok(())
+}
+
+pub fn get_parametrizations(path: &str, name: &str) -> Result<Vec<String>> {
+    let currrent_dir = env::current_dir().unwrap();
+    let current_dir = Path::new(&currrent_dir);
+    let path_buf = current_dir.join(path);
+    let path = path_buf.as_path();
+
+    let mut py_code = fs::read_to_string(path)?;
+    let s1 = indoc! {"
+    import pytest
+    import itertools
+    def get_parameter_name(obj):
+        if isinstance(obj, list) or isinstance(obj, tuple):
+            return '-'.join([get_parameter_name(o) for o in obj])
+        
+        
+        if hasattr(obj, '__name__'):
+            return obj.__name__
+        else:
+            return str(obj)
+
+    def decorator_factory(argnames, argvalues):
+        def decorator(function):
+            # Generate all parameter combinations if multiple decorators are used
+            if not hasattr(function, 'parameters'):
+                function.parameters = []
+
+            parameters = [get_parameter_name(v) for v in argvalues]
+            if function.parameters:
+                parameters = list(itertools.product(parameters, function.parameters))
+            setattr(function, 'parameters', [get_parameter_name(v) for v in parameters])
+            
+            return function
+        return decorator
+    
+
+    pytest.mark.parametrize =  decorator_factory
+
+    "};
+    py_code.insert_str(0, s1);
+
+    let result = Python::with_gil(|py| -> Vec<String> {
+        let syspath = py
+            .import_bound("sys")
+            .unwrap()
+            .getattr("path")
+            .unwrap()
+            .downcast_into::<PyList>()
+            .unwrap();
+
+        syspath.insert(0, path).unwrap();
+
+        let module = PyModule::from_code_bound(py, &py_code, "", "").unwrap();
+        let function: Py<PyAny> = module.getattr(name).unwrap().into();
+        let instance: Vec<String> = function
+            .getattr(py, "parameters")
+            .unwrap()
+            .extract(py)
+            .unwrap();
+        instance
+    });
+    Ok(result)
 }

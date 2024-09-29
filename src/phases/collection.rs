@@ -13,6 +13,7 @@ use crate::phases::collectors::ignore_test;
 
 use super::collectors::ignore_skip;
 use super::collectors::parametrize;
+use super::execution;
 
 pub fn find_files(paths: Vec<String>, prefix: &str, tx: mpsc::Sender<String>) -> Result<()> {
     for path in &paths {
@@ -58,21 +59,28 @@ pub fn find_tests(
                     match stmt {
                         FunctionDef(ref node)
                             if node.name.starts_with(&prefix)
-                                && !ignore_skip::is_pytest_skip(stmt.clone())
-                                && !ignore_test::is_pytest_fixture(stmt.clone()) =>
+                                && !ignore_skip::is_pytest_skip(&stmt)
+                                && !ignore_test::is_pytest_fixture(&stmt) =>
                         {
-                            parametrize::expand_parameters(stmt.clone())
-                                .unwrap_or_default()
-                                .iter()
-                                .for_each(|test| {
+                            if parametrize::is_parametrized(&stmt) {
+                                let parameters =
+                                    execution::get_parametrizations(&file_name, &node.name)?;
+                                for param in parameters {
                                     tx.send(TestCase {
                                         file: file_name.clone(),
-                                        name: test.to_string(),
+                                        name: format!("{}[{}]", node.name, param),
                                         passed: false,
                                         error: None,
-                                    })
-                                    .unwrap()
-                                });
+                                    })?;
+                                }
+                            } else {
+                                tx.send(TestCase {
+                                    file: file_name.clone(),
+                                    name: node.name.to_string(),
+                                    passed: false,
+                                    error: None,
+                                })?;
+                            }
                         }
                         ClassDef(node) if node.bases.iter().any(find_unittest_base) => {
                             let cases = find_unittest_class_cases(
@@ -133,8 +141,7 @@ fn find_unittest_class_cases(
     for stmt in stmts {
         match stmt {
             FunctionDef(node)
-                if node.name.starts_with(prefix)
-                    && !ignore_test::is_pytest_fixture(stmt.clone()) =>
+                if node.name.starts_with(prefix) && !ignore_test::is_pytest_fixture(&stmt) =>
             {
                 cases.push(node.name.to_string())
             }

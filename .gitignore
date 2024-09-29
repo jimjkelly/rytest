@@ -7,3 +7,5 @@ public/
 
 # insta snap files
 *.rs.pending-snap
+
+venv

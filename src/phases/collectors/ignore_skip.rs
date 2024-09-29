@@ -2,7 +2,7 @@ use rustpython_parser::ast;
 use rustpython_parser::ast::Stmt;
 use rustpython_parser::ast::Stmt::FunctionDef;
 
-pub fn is_pytest_skip(stmt: Stmt) -> bool {
+pub fn is_pytest_skip(stmt: &Stmt) -> bool {
     match stmt {
         FunctionDef(node) => node.decorator_list.iter().any(|decorator| {
             match decorator {
@@ -55,7 +55,7 @@ mod tests {
             pass
         ";
         let ast = ast::Suite::parse(code, "<embedded>");
-        let result = is_pytest_skip(ast.unwrap().first().take().unwrap().clone());
+        let result = is_pytest_skip(ast.unwrap().first().take().unwrap());
         assert!(!result);
     }
 
@@ -67,7 +67,7 @@ mod tests {
                 pass
         "};
         let ast = ast::Suite::parse(code, "<embedded>");
-        let result = is_pytest_skip(ast.unwrap().first().take().unwrap().clone());
+        let result = is_pytest_skip(ast.unwrap().first().take().unwrap());
         assert!(result);
     }
 
@@ -79,7 +79,7 @@ mod tests {
                 pass
         "};
         let ast = ast::Suite::parse(code, "<embedded>");
-        let result = is_pytest_skip(ast.unwrap().first().take().unwrap().clone());
+        let result = is_pytest_skip(ast.unwrap().first().take().unwrap());
         assert!(result);
     }
 }

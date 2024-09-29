@@ -65,10 +65,24 @@ fn collect_errors() {
         ERROR tests/input/test_bad_file.py
         tests/input/test_file.py::test_function_passes
         tests/input/test_file.py::test_function_fails
-        tests/input/test_file.py::test_parameterized[a0-b0]
-        tests/input/test_file.py::test_parameterized[a1-b1]
+        tests/input/test_file.py::test_parameterized[1]
+        tests/input/test_file.py::test_parameterized[2]
+        tests/input/test_file.py::test_parameterized[3]
+        tests/input/test_file.py::test_parameterized_tuple[1-2]
+        tests/input/test_file.py::test_parameterized_tuple[3-4]
+        tests/input/test_file.py::test_parameterized_nested[a-1-2]
+        tests/input/test_file.py::test_parameterized_nested[a-3-4]
+        tests/input/test_file.py::test_parameterized_nested[c-1-2]
+        tests/input/test_file.py::test_parameterized_nested[c-3-4]
+        tests/input/test_file.py::test_parameterized_expression[0]
+        tests/input/test_file.py::test_parameterized_expression[1]
+        tests/input/test_file.py::test_parameterized_expression[2]
+        tests/input/test_file.py::test_parameterized_functions[round]
+        tests/input/test_file.py::test_parameterized_functions[sum]
+        tests/input/test_file.py::test_parameterized_functions[int]
+        tests/input/test_file.py::test_parameterized_functions[float]
         tests/input/test_fixtures.py::test_fixture
-        14 tests collected, 2 errors in <TIME>s
+        28 tests collected, 2 errors in <TIME>s
 
         ----- stderr -----
         "###)
