@@ -37,3 +37,11 @@ dynamic = [
 ]
 urls.Source = "https://github.com/jimjkelly/rytest"
 urls.Tracker = "https://github.com/jimjkelly/rytest/issues"
+
+
+[tool.maturin]
+bindings = "bin"
+manifest-path = "crates/rytest/Cargo.toml"
+module-name = "rytest"
+python-source = "python"
+strip = true

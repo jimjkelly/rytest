@@ -17,6 +17,12 @@ This will run tests in any python file in the `tests` directory that starts with
 
 ## Development
 
+In order for maturin to build and link against python, you will need to ensure there is a virtualenv available to it:
+
+```bash
+python3 -m venv .venv
+```
+
 To test against our local test fixtures, run:
 
 ```bash

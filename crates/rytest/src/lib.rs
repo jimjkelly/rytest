@@ -1,5 +1,5 @@
 use anyhow::Result;
-use clap::{App, Arg};
+use clap::{Arg, Command};
 
 use std::sync::mpsc::{self};
 use std::thread;
@@ -14,60 +14,74 @@ pub use crate::phases::reporting;
 pub use crate::structs::{Config, TestCase};
 
 pub fn get_args() -> Result<Config> {
-    let matches = App::new("rytest")
+    let matches = Command::new("rytest")
         .version("0.1.0")
         .about("rytest is a reasonably fast, somewhat Pytest compatible Python test runner.")
         // An alphabetical list of arguments
         .arg(
-            Arg::with_name("collect_only")
+            Arg::new("collect_only")
                 .long("collect-only")
                 .help("only collect tests, don't run them")
-                .takes_value(false),
+                .action(clap::ArgAction::SetTrue),
         )
         .arg(
-            Arg::with_name("file_prefix")
-                .short("f")
+            Arg::new("file_prefix")
+                .short('f')
                 .long("file-prefix")
                 .help("The prefix to search for to indicate a file contains tests")
                 .default_value("test_"),
         )
         .arg(
-            Arg::with_name("test_prefix")
-                .short("p")
+            Arg::new("test_prefix")
+                .short('p')
                 .long("test-prefix")
                 .help("The prefix to search for to indicate a function is a test")
                 .default_value("test_"),
         )
         .arg(
-            Arg::with_name("ignore")
-                .short("i")
+            Arg::new("ignore")
+                .short('i')
                 .long("ignore")
                 .help("Ignore file(s) and folders. Can be used multiple times")
                 .default_value(".venv"),
         )
         .arg(
-            Arg::with_name("files")
+            Arg::new("files")
                 .value_name("FILE")
                 .help("Input file(s)")
                 .default_value(".")
-                .min_values(1),
+                .num_args(1..),
         )
         .arg(
-            Arg::with_name("verbose")
-                .short("v")
+            Arg::new("verbose")
+                .short('v')
                 .long("verbose")
                 .help("Verbose output")
-                .takes_value(false),
+                .action(clap::ArgAction::SetTrue),
         )
         .get_matches();
 
     Ok(Config {
-        collect_only: matches.is_present("collect_only"),
-        file_prefix: matches.value_of("file_prefix").unwrap().to_string(),
-        test_prefix: matches.value_of("test_prefix").unwrap().to_string(),
-        files: matches.values_of_lossy("files").unwrap(),
-        ignores: matches.values_of_lossy("ignore").unwrap(),
-        verbose: matches.is_present("verbose"),
+        collect_only: matches.get_flag("collect_only"),
+        file_prefix: matches
+            .get_one::<String>("file_prefix")
+            .unwrap()
+            .to_string(),
+        test_prefix: matches
+            .get_one::<String>("test_prefix")
+            .unwrap()
+            .to_string(),
+        files: matches
+            .get_many::<String>("files")
+            .unwrap()
+            .map(|s| s.to_string())
+            .collect(),
+        ignores: matches
+            .get_many::<String>("ignore")
+            .unwrap()
+            .map(|s| s.to_string())
+            .collect(),
+        verbose: matches.get_flag("verbose"),
     })
 }
 
