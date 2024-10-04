@@ -47,7 +47,7 @@ pub fn run_tests(rx: mpsc::Receiver<TestCase>, tx: mpsc::Sender<TestCase>) -> Re
     Ok(())
 }
 
-pub fn get_parametrizations(path: &str, name: &str) -> Result<Vec<String>> {
+pub fn get_parametrizations(path: &str, name: &str) -> Result<Vec<String>, PyErr> {
     let currrent_dir = env::current_dir().unwrap();
     let current_dir = Path::new(&currrent_dir);
     let path_buf = current_dir.join(path);
@@ -87,7 +87,7 @@ pub fn get_parametrizations(path: &str, name: &str) -> Result<Vec<String>> {
     "};
     py_code.insert_str(0, s1);
 
-    let result = Python::with_gil(|py| -> Vec<String> {
+    let result = Python::with_gil(|py| -> PyResult<Vec<String>> {
         let syspath = py
             .import_bound("sys")
             .unwrap()
@@ -96,16 +96,23 @@ pub fn get_parametrizations(path: &str, name: &str) -> Result<Vec<String>> {
             .downcast_into::<PyList>()
             .unwrap();
 
+        syspath.insert(0, current_dir).unwrap();
         syspath.insert(0, path).unwrap();
 
-        let module = PyModule::from_code_bound(py, &py_code, "", "").unwrap();
-        let function: Py<PyAny> = module.getattr(name).unwrap().into();
-        let instance: Vec<String> = function
+        
+        let module = PyModule::from_code_bound(py, &py_code, "", "");
+        if module.is_err() {
+            return Err(module.err().unwrap());
+        }
+        let function_instance = module.unwrap().clone().getattr(name);
+        if function_instance.is_err() {
+            return Err(function_instance.err().unwrap());
+        }
+        let function: Py<PyAny> = function_instance?.into();
+        function
             .getattr(py, "parameters")
             .unwrap()
             .extract(py)
-            .unwrap();
-        instance
     });
-    Ok(result)
+    result
 }

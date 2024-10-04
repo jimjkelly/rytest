@@ -100,7 +100,7 @@ pub fn run(config: Config) -> Result<()> {
         handle_output.join().unwrap();
     } else {
         let handle_output = thread::spawn(move || {
-            reporting::output_collect(rx_tests, start).unwrap();
+            reporting::output_collect(rx_tests, start, config.verbose).unwrap();
         });
         handle_output.join().unwrap();
     }

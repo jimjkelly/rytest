@@ -63,15 +63,23 @@ pub fn find_tests(
                                 && !ignore_test::is_pytest_fixture(&stmt) =>
                         {
                             if parametrize::is_parametrized(&stmt) {
-                                let parameters =
-                                    execution::get_parametrizations(&file_name, &node.name)?;
-                                for param in parameters {
-                                    tx.send(TestCase {
+                                match execution::get_parametrizations(&file_name, &node.name) {
+                                    Ok(parameters) => {
+                                        for param in parameters {
+                                            tx.send(TestCase {
+                                                file: file_name.clone(),
+                                                name: format!("{}[{}]", node.name, param),
+                                                passed: false,
+                                                error: None,
+                                            })?;
+                                        }
+                                    }
+                                    Err(e) => tx.send(TestCase {
                                         file: file_name.clone(),
-                                        name: format!("{}[{}]", node.name, param),
+                                        name: node.name.to_string(),
                                         passed: false,
-                                        error: None,
-                                    })?;
+                                        error: Some(e),
+                                    })?,
                                 }
                             } else {
                                 tx.send(TestCase {
@@ -101,7 +109,7 @@ pub fn find_tests(
                                 }
                             }
                         }
-                        _ if verbose => println!("{}: Skipping {:#?}\n\n", file_name, stmt),
+                        //_ if verbose => println!("{}: Skipping {:#?}\n\n", file_name, stmt),
                         _ => {}
                     }
                 }
@@ -134,8 +142,8 @@ fn find_unittest_base(expr: &ast::Expr) -> bool {
 fn find_unittest_class_cases(
     stmts: Vec<Stmt>,
     prefix: &str,
-    file_name: String,
-    verbose: bool,
+    _file_name: String,
+    _verbose: bool,
 ) -> Vec<String> {
     let mut cases = vec![];
     for stmt in stmts {
@@ -145,7 +153,7 @@ fn find_unittest_class_cases(
             {
                 cases.push(node.name.to_string())
             }
-            _ if verbose => println!("{}: Skipping {:#?}\n\n", file_name, stmt),
+            //_ if verbose => println!("{}: Skipping {:#?}\n\n", file_name, stmt),
             _ => {}
         }
     }

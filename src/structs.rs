@@ -1,5 +1,6 @@
 use pyo3::PyErr;
 
+#[derive(Debug)]
 pub struct Config {
     pub collect_only: bool,
     pub files: Vec<String>,
@@ -8,6 +9,7 @@ pub struct Config {
     pub verbose: bool,
 }
 
+#[derive(Debug)]
 pub struct TestCase {
     pub file: String,
     pub name: String,

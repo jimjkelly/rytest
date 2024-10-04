@@ -3,14 +3,23 @@ use std::{sync::mpsc, time::Instant};
 
 use crate::TestCase;
 
-pub fn output_collect(rx: mpsc::Receiver<TestCase>, start: Instant) -> Result<()> {
+pub fn output_collect(rx: mpsc::Receiver<TestCase>, start: Instant, verbose: bool) -> Result<()> {
     let mut collected = 0;
     let mut errors = 0;
 
     while let Ok(test) = rx.recv() {
         match test.error {
             Some(_) => {
-                println!("ERROR {}", test.file);
+                if test.name.is_empty() {
+                    println!("ERROR {}", test.file);
+                } else {
+                    println!("ERROR {}::{}", test.file, test.name);
+                }
+                if verbose {
+                    if let Some(error) = test.error {
+                        println!("{}", error);
+                    }
+                }
                 errors += 1
             }
             None => {
