@@ -43,7 +43,7 @@ pub fn get_args() -> Result<Config> {
                 .short("i")
                 .long("ignore")
                 .help("Ignore file(s) and folders. Can be used multiple times")
-                .default_value(".venv")
+                .default_value(".venv"),
         )
         .arg(
             Arg::with_name("files")
@@ -79,7 +79,13 @@ pub fn run(config: Config) -> Result<()> {
 
     let _ = thread::spawn(move || {
         let tx_files = tx_files.clone();
-        collection::find_files(config.files, config.ignores, config.file_prefix.as_str(), tx_files).unwrap();
+        collection::find_files(
+            config.files,
+            config.ignores,
+            config.file_prefix.as_str(),
+            tx_files,
+        )
+        .unwrap();
     });
 
     let _ = thread::spawn(move || {

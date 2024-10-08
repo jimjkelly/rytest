@@ -15,7 +15,12 @@ use super::collectors::ignore_skip;
 use super::collectors::parametrize;
 use super::execution;
 
-pub fn find_files(paths: Vec<String>, ignores: Vec<String>, prefix: &str, tx: mpsc::Sender<String>) -> Result<()> {
+pub fn find_files(
+    paths: Vec<String>,
+    ignores: Vec<String>,
+    prefix: &str,
+    tx: mpsc::Sender<String>,
+) -> Result<()> {
     for path in &paths {
         for entry in WalkDir::new(path)
             .sort_by_file_name()

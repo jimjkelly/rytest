@@ -101,7 +101,10 @@ pub fn get_parametrizations(path: &str, name: &str) -> Result<Vec<String>, PyErr
             let venv = venv.unwrap();
             let venv_path = Path::new(&venv);
             let version = py.version_info();
-            let site_packages = venv_path.join(format!("lib/python{}.{}/site-packages", version.major, version.minor));
+            let site_packages = venv_path.join(format!(
+                "lib/python{}.{}/site-packages",
+                version.major, version.minor
+            ));
             syspath.insert(0, site_packages).unwrap();
         }
 
