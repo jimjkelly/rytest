@@ -1,0 +1,2 @@
+[alias]
+render-benchmark = "run --package rytest-render-benchmark"

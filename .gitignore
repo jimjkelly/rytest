@@ -12,3 +12,6 @@ public/
 
 .venv
 venv
+
+# output of some build tooling for our release process
+output/
