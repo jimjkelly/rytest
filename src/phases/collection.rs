@@ -15,7 +15,7 @@ use super::collectors::ignore_skip;
 use super::collectors::parametrize;
 use super::execution;
 
-pub fn find_files(paths: Vec<String>, prefix: &str, tx: mpsc::Sender<String>) -> Result<()> {
+pub fn find_files(paths: Vec<String>, ignores: Vec<String>, prefix: &str, tx: mpsc::Sender<String>) -> Result<()> {
     for path in &paths {
         for entry in WalkDir::new(path)
             .sort_by_file_name()
@@ -30,6 +30,7 @@ pub fn find_files(paths: Vec<String>, prefix: &str, tx: mpsc::Sender<String>) ->
             };
             if p.file_stem().unwrap().to_string_lossy().starts_with(prefix)
                 && p.extension().unwrap() == "py"
+                && !ignores.iter().any(|i| p.to_str().unwrap().starts_with(i))
             {
                 tx.send(p.to_str().unwrap().to_string())?;
             }
@@ -174,7 +175,7 @@ mod tests {
         let paths = vec!["tests".to_string()];
         let prefix = "test_".to_string();
         let (tx, rx) = mpsc::channel();
-        let _ = find_files(paths, prefix.as_str(), tx);
+        let _ = find_files(paths, vec![], prefix.as_str(), tx);
         let mut files: Vec<String> = rx.iter().collect();
         files.sort();
 
@@ -198,7 +199,7 @@ mod tests {
         let paths = vec![".".to_string()];
         let prefix = "test_".to_string();
         let (tx, rx) = mpsc::channel();
-        let _ = find_files(paths, prefix.as_str(), tx);
+        let _ = find_files(paths, vec![".venv".to_string()], prefix.as_str(), tx);
         let mut files: Vec<String> = rx.iter().collect();
         files.sort();
 
@@ -222,7 +223,7 @@ mod tests {
         let paths = vec!["./".to_string()];
         let prefix = "test_".to_string();
         let (tx, rx) = mpsc::channel();
-        let _ = find_files(paths, prefix.as_str(), tx);
+        let _ = find_files(paths, vec![".venv".to_string()], prefix.as_str(), tx);
         let mut files: Vec<String> = rx.iter().collect();
         files.sort();
 
@@ -249,7 +250,7 @@ mod tests {
         ];
         let prefix = "test_".to_string();
         let (tx, rx) = mpsc::channel();
-        let _ = find_files(paths, prefix.as_str(), tx);
+        let _ = find_files(paths, vec![], prefix.as_str(), tx);
         let mut files: Vec<String> = rx.iter().collect();
         files.sort();
 
@@ -268,7 +269,7 @@ mod tests {
         let paths = vec!["tests/input".to_string()];
         let prefix = "test_".to_string();
         let (tx, rx) = mpsc::channel();
-        let _ = find_files(paths, prefix.as_str(), tx);
+        let _ = find_files(paths, vec![], prefix.as_str(), tx);
         let mut files: Vec<String> = rx.iter().collect();
         files.sort();
 

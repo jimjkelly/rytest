@@ -15,7 +15,7 @@ on:
   # Note that the "Deploy to Github Pages" step won't run in this mode,
   # so this won't have any side-effects. But it will tell you if a PR
   # completely broke oranda/mdbook. Sadly we don't provide previews (yet)!
-  pull_request:
+  # pull_request:
 
   # Whenever something gets pushed to main, update the docs!
   # This is great for getting docs changes live without cutting a full release.
@@ -30,9 +30,9 @@ on:
   # If you only want docs to update with releases, disable this, or change it to
   # a "release" branch. You can, of course, also manually trigger a workflow run
   # when you want the docs to update.
-  push:
-    branches:
-      - main
+  # push:
+  #  branches:
+  #    - main
 
   # Whenever a workflow called "Release" completes, update the docs!
   #

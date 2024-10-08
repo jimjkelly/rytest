@@ -96,6 +96,15 @@ pub fn get_parametrizations(path: &str, name: &str) -> Result<Vec<String>, PyErr
             .downcast_into::<PyList>()
             .unwrap();
 
+        let venv = env::var("VIRTUAL_ENV");
+        if venv.is_ok() {
+            let venv = venv.unwrap();
+            let venv_path = Path::new(&venv);
+            let version = py.version_info();
+            let site_packages = venv_path.join(format!("lib/python{}.{}/site-packages", version.major, version.minor));
+            syspath.insert(0, site_packages).unwrap();
+        }
+
         syspath.insert(0, current_dir).unwrap();
         syspath.insert(0, path).unwrap();
 
