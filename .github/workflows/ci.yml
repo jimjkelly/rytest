@@ -32,6 +32,9 @@ jobs:
         with:
           command: clippy
           args: --all-targets --all-features -- -D warnings
+      - run: pip install -e .
+        env:
+          RUST_BACKTRACE: 1
       - uses: actions-rs/cargo@v1
         name: cargo test
         with:
