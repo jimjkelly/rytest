@@ -13,8 +13,14 @@ use crate::phases::collectors::ignore_test;
 
 use super::collectors::ignore_skip;
 use super::collectors::parametrize;
+use super::execution;
 
-pub fn find_files(paths: Vec<String>, prefix: &str, tx: mpsc::Sender<String>) -> Result<()> {
+pub fn find_files(
+    paths: Vec<String>,
+    ignores: Vec<String>,
+    prefix: &str,
+    tx: mpsc::Sender<String>,
+) -> Result<()> {
     for path in &paths {
         for entry in WalkDir::new(path)
             .sort_by_file_name()
@@ -29,6 +35,7 @@ pub fn find_files(paths: Vec<String>, prefix: &str, tx: mpsc::Sender<String>) ->
             };
             if p.file_stem().unwrap().to_string_lossy().starts_with(prefix)
                 && p.extension().unwrap() == "py"
+                && !ignores.iter().any(|i| p.to_str().unwrap().starts_with(i))
             {
                 tx.send(p.to_str().unwrap().to_string())?;
             }
@@ -58,21 +65,36 @@ pub fn find_tests(
                     match stmt {
                         FunctionDef(ref node)
                             if node.name.starts_with(&prefix)
-                                && !ignore_skip::is_pytest_skip(stmt.clone())
-                                && !ignore_test::is_pytest_fixture(stmt.clone()) =>
+                                && !ignore_skip::is_pytest_skip(&stmt)
+                                && !ignore_test::is_pytest_fixture(&stmt) =>
                         {
-                            parametrize::expand_parameters(stmt.clone())
-                                .unwrap_or_default()
-                                .iter()
-                                .for_each(|test| {
-                                    tx.send(TestCase {
+                            if parametrize::is_parametrized(&stmt) {
+                                match execution::get_parametrizations(&file_name, &node.name) {
+                                    Ok(parameters) => {
+                                        for param in parameters {
+                                            tx.send(TestCase {
+                                                file: file_name.clone(),
+                                                name: format!("{}[{}]", node.name, param),
+                                                passed: false,
+                                                error: None,
+                                            })?;
+                                        }
+                                    }
+                                    Err(e) => tx.send(TestCase {
                                         file: file_name.clone(),
-                                        name: test.to_string(),
+                                        name: node.name.to_string(),
                                         passed: false,
-                                        error: None,
-                                    })
-                                    .unwrap()
-                                });
+                                        error: Some(e),
+                                    })?,
+                                }
+                            } else {
+                                tx.send(TestCase {
+                                    file: file_name.clone(),
+                                    name: node.name.to_string(),
+                                    passed: false,
+                                    error: None,
+                                })?;
+                            }
                         }
                         ClassDef(node) if node.bases.iter().any(find_unittest_base) => {
                             let cases = find_unittest_class_cases(
@@ -93,7 +115,7 @@ pub fn find_tests(
                                 }
                             }
                         }
-                        _ if verbose => println!("{}: Skipping {:#?}\n\n", file_name, stmt),
+                        //_ if verbose => println!("{}: Skipping {:#?}\n\n", file_name, stmt),
                         _ => {}
                     }
                 }
@@ -126,19 +148,18 @@ fn find_unittest_base(expr: &ast::Expr) -> bool {
 fn find_unittest_class_cases(
     stmts: Vec<Stmt>,
     prefix: &str,
-    file_name: String,
-    verbose: bool,
+    _file_name: String,
+    _verbose: bool,
 ) -> Vec<String> {
     let mut cases = vec![];
     for stmt in stmts {
         match stmt {
             FunctionDef(node)
-                if node.name.starts_with(prefix)
-                    && !ignore_test::is_pytest_fixture(stmt.clone()) =>
+                if node.name.starts_with(prefix) && !ignore_test::is_pytest_fixture(&stmt) =>
             {
                 cases.push(node.name.to_string())
             }
-            _ if verbose => println!("{}: Skipping {:#?}\n\n", file_name, stmt),
+            //_ if verbose => println!("{}: Skipping {:#?}\n\n", file_name, stmt),
             _ => {}
         }
     }
@@ -159,7 +180,7 @@ mod tests {
         let paths = vec!["tests".to_string()];
         let prefix = "test_".to_string();
         let (tx, rx) = mpsc::channel();
-        let _ = find_files(paths, prefix.as_str(), tx);
+        let _ = find_files(paths, vec![], prefix.as_str(), tx);
         let mut files: Vec<String> = rx.iter().collect();
         files.sort();
 
@@ -183,7 +204,7 @@ mod tests {
         let paths = vec![".".to_string()];
         let prefix = "test_".to_string();
         let (tx, rx) = mpsc::channel();
-        let _ = find_files(paths, prefix.as_str(), tx);
+        let _ = find_files(paths, vec![".venv".to_string()], prefix.as_str(), tx);
         let mut files: Vec<String> = rx.iter().collect();
         files.sort();
 
@@ -207,7 +228,7 @@ mod tests {
         let paths = vec!["./".to_string()];
         let prefix = "test_".to_string();
         let (tx, rx) = mpsc::channel();
-        let _ = find_files(paths, prefix.as_str(), tx);
+        let _ = find_files(paths, vec![".venv".to_string()], prefix.as_str(), tx);
         let mut files: Vec<String> = rx.iter().collect();
         files.sort();
 
@@ -234,7 +255,7 @@ mod tests {
         ];
         let prefix = "test_".to_string();
         let (tx, rx) = mpsc::channel();
-        let _ = find_files(paths, prefix.as_str(), tx);
+        let _ = find_files(paths, vec![], prefix.as_str(), tx);
         let mut files: Vec<String> = rx.iter().collect();
         files.sort();
 
@@ -253,7 +274,7 @@ mod tests {
         let paths = vec!["tests/input".to_string()];
         let prefix = "test_".to_string();
         let (tx, rx) = mpsc::channel();
-        let _ = find_files(paths, prefix.as_str(), tx);
+        let _ = find_files(paths, vec![], prefix.as_str(), tx);
         let mut files: Vec<String> = rx.iter().collect();
         files.sort();
 

@@ -32,6 +32,13 @@ jobs:
         with:
           command: clippy
           args: --all-targets --all-features -- -D warnings
+      - name: set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+      - run: pip install -e .
+        env:
+          RUST_BACKTRACE: 1
       - uses: actions-rs/cargo@v1
         name: cargo test
         with:

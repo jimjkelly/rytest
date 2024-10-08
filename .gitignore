@@ -1,3 +1,5 @@
+.DS_Store
+
 __pycache__
 
 /target
@@ -7,3 +9,6 @@ public/
 
 # insta snap files
 *.rs.pending-snap
+
+.venv
+venv

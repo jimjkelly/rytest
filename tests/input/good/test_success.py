@@ -1,3 +1,4 @@
+import pytest
 from tests.input.good.utils import assert_true
 
 def test_success():

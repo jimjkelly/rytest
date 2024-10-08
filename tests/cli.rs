@@ -17,30 +17,31 @@ fn help() {
     let settings = setup();
 
     settings.bind(|| assert_cmd_snapshot!(cli().arg("--help"), @r###"
-    success: true
-    exit_code: 0
-    ----- stdout -----
-    rytest 0.1.0
-    rytest is a reasonably fast, somewhat Pytest compatible Python test runner.
+                     success: true
+                     exit_code: 0
+                     ----- stdout -----
+                     rytest 0.1.0
+                     rytest is a reasonably fast, somewhat Pytest compatible Python test runner.
 
-    USAGE:
-        rytest [FLAGS] [OPTIONS] [FILE]...
+                     USAGE:
+                         rytest [FLAGS] [OPTIONS] [FILE]...
 
-    FLAGS:
-            --collect-only    only collect tests, don't run them
-        -h, --help            Prints help information
-        -V, --version         Prints version information
-        -v, --verbose         Verbose output
+                     FLAGS:
+                             --collect-only    only collect tests, don't run them
+                         -h, --help            Prints help information
+                         -V, --version         Prints version information
+                         -v, --verbose         Verbose output
 
-    OPTIONS:
-        -f, --file-prefix <file_prefix>    The prefix to search for to indicate a file contains tests [default: test_]
-        -p, --test-prefix <test_prefix>    The prefix to search for to indicate a function is a test [default: test_]
+                     OPTIONS:
+                         -f, --file-prefix <file_prefix>    The prefix to search for to indicate a file contains tests [default: test_]
+                         -i, --ignore <ignore>              Ignore file(s) and folders. Can be used multiple times [default: .venv]
+                         -p, --test-prefix <test_prefix>    The prefix to search for to indicate a function is a test [default: test_]
 
-    ARGS:
-        <FILE>...    Input file(s) [default: .]
+                     ARGS:
+                         <FILE>...    Input file(s) [default: .]
 
-    ----- stderr -----
-    "###));
+                     ----- stderr -----
+                     "###));
 }
 
 #[test]
@@ -65,10 +66,24 @@ fn collect_errors() {
         ERROR tests/input/test_bad_file.py
         tests/input/test_file.py::test_function_passes
         tests/input/test_file.py::test_function_fails
-        tests/input/test_file.py::test_parameterized[a0-b0]
-        tests/input/test_file.py::test_parameterized[a1-b1]
+        tests/input/test_file.py::test_parameterized[1]
+        tests/input/test_file.py::test_parameterized[2]
+        tests/input/test_file.py::test_parameterized[3]
+        tests/input/test_file.py::test_parameterized_tuple[1-2]
+        tests/input/test_file.py::test_parameterized_tuple[3-4]
+        tests/input/test_file.py::test_parameterized_nested[a-1-2]
+        tests/input/test_file.py::test_parameterized_nested[a-3-4]
+        tests/input/test_file.py::test_parameterized_nested[c-1-2]
+        tests/input/test_file.py::test_parameterized_nested[c-3-4]
+        tests/input/test_file.py::test_parameterized_expression[0]
+        tests/input/test_file.py::test_parameterized_expression[1]
+        tests/input/test_file.py::test_parameterized_expression[2]
+        tests/input/test_file.py::test_parameterized_functions[round]
+        tests/input/test_file.py::test_parameterized_functions[sum]
+        tests/input/test_file.py::test_parameterized_functions[int]
+        tests/input/test_file.py::test_parameterized_functions[float]
         tests/input/test_fixtures.py::test_fixture
-        14 tests collected, 2 errors in <TIME>s
+        28 tests collected, 2 errors in <TIME>s
 
         ----- stderr -----
         "###)

@@ -39,6 +39,13 @@ pub fn get_args() -> Result<Config> {
                 .default_value("test_"),
         )
         .arg(
+            Arg::with_name("ignore")
+                .short("i")
+                .long("ignore")
+                .help("Ignore file(s) and folders. Can be used multiple times")
+                .default_value(".venv"),
+        )
+        .arg(
             Arg::with_name("files")
                 .value_name("FILE")
                 .help("Input file(s)")
@@ -59,6 +66,7 @@ pub fn get_args() -> Result<Config> {
         file_prefix: matches.value_of("file_prefix").unwrap().to_string(),
         test_prefix: matches.value_of("test_prefix").unwrap().to_string(),
         files: matches.values_of_lossy("files").unwrap(),
+        ignores: matches.values_of_lossy("ignore").unwrap(),
         verbose: matches.is_present("verbose"),
     })
 }
@@ -71,7 +79,13 @@ pub fn run(config: Config) -> Result<()> {
 
     let _ = thread::spawn(move || {
         let tx_files = tx_files.clone();
-        collection::find_files(config.files, config.file_prefix.as_str(), tx_files).unwrap();
+        collection::find_files(
+            config.files,
+            config.ignores,
+            config.file_prefix.as_str(),
+            tx_files,
+        )
+        .unwrap();
     });
 
     let _ = thread::spawn(move || {
@@ -100,7 +114,7 @@ pub fn run(config: Config) -> Result<()> {
         handle_output.join().unwrap();
     } else {
         let handle_output = thread::spawn(move || {
-            reporting::output_collect(rx_tests, start).unwrap();
+            reporting::output_collect(rx_tests, start, config.verbose).unwrap();
         });
         handle_output.join().unwrap();
     }
