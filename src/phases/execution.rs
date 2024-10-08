@@ -99,7 +99,6 @@ pub fn get_parametrizations(path: &str, name: &str) -> Result<Vec<String>, PyErr
         syspath.insert(0, current_dir).unwrap();
         syspath.insert(0, path).unwrap();
 
-        
         let module = PyModule::from_code_bound(py, &py_code, "", "");
         if module.is_err() {
             return Err(module.err().unwrap());
@@ -109,10 +108,7 @@ pub fn get_parametrizations(path: &str, name: &str) -> Result<Vec<String>, PyErr
             return Err(function_instance.err().unwrap());
         }
         let function: Py<PyAny> = function_instance?.into();
-        function
-            .getattr(py, "parameters")
-            .unwrap()
-            .extract(py)
+        function.getattr(py, "parameters").unwrap().extract(py)
     });
     result
 }
