@@ -1,32 +1,21 @@
-[package]
-name = "rytest"
-description = "rytest is a reasonably fast, somewhat Pytest compatible Python test runner."
-repository = "https://github.com/jimjkelly/rytest"
+[workspace]
+members = ["crates/*"]
+resolver = "2"
+
+[workspace.package]
 edition = "2021"
+rust-version = "1.81"
+homepage = "https://github.com/jimjkelly/rytest"
+documentation = "https://github.com/jimjkelly/rytest"
+repository = "https://github.com/jimjkelly/rytest"
+authors = ["rytest Developers"]
+license = "MIT"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
+[workspace.dependencies]
+rytest = { path = "crates/rytest" }
+rytest-render-benchmark = { path = "crates/rytest-render-benchmark" }
 anyhow = "1.0.86"
-clap = "2.33.3"
-notify = "6.1.1"
-rustpython-parser = "0.3.1"
-walkdir = "2.5.0"
-
-[dev-dependencies]
-insta = { version = "1.39.0", features = ["filters", "yaml"] }
-insta-cmd = "0.6.0"
-predicates = "2"
-pretty_assertions = "1.4.0"
-
-# The profile that 'cargo dist' will build with
-[profile.dist]
-inherits = "release"
-lto = "thin"
-
-# Makes insta faster
-[profile.dev.package]
-insta.opt-level = 3
+clap = "4.5.19"
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]
@@ -43,6 +32,11 @@ install-path = "CARGO_HOME"
 # Whether to install an updater program
 install-updater = false
 
-[dependencies.pyo3]
-version = "0.21.2"
-features = ["auto-initialize"]
+# The profile that 'cargo dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
+
+# Makes insta faster
+[profile.dev.package]
+insta.opt-level = 3

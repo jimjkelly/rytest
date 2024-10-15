@@ -20,25 +20,24 @@ fn help() {
                      success: true
                      exit_code: 0
                      ----- stdout -----
-                     rytest 0.1.0
                      rytest is a reasonably fast, somewhat Pytest compatible Python test runner.
 
-                     USAGE:
-                         rytest [FLAGS] [OPTIONS] [FILE]...
+                     Usage: rytest [OPTIONS] [FILE]...
 
-                     FLAGS:
-                             --collect-only    only collect tests, don't run them
-                         -h, --help            Prints help information
-                         -V, --version         Prints version information
-                         -v, --verbose         Verbose output
+                     Arguments:
+                       [FILE]...  Input file(s) [default: .]
 
-                     OPTIONS:
-                         -f, --file-prefix <file_prefix>    The prefix to search for to indicate a file contains tests [default: test_]
-                         -i, --ignore <ignore>              Ignore file(s) and folders. Can be used multiple times [default: .venv]
-                         -p, --test-prefix <test_prefix>    The prefix to search for to indicate a function is a test [default: test_]
-
-                     ARGS:
-                         <FILE>...    Input file(s) [default: .]
+                     Options:
+                           --collect-only               only collect tests, don't run them
+                       -f, --file-prefix <file_prefix>  The prefix to search for to indicate a file contains tests
+                                                        [default: test_]
+                       -p, --test-prefix <test_prefix>  The prefix to search for to indicate a function is a test
+                                                        [default: test_]
+                       -i, --ignore <ignore>            Ignore file(s) and folders. Can be used multiple times [default:
+                                                        .venv]
+                       -v, --verbose                    Verbose output
+                       -h, --help                       Print help
+                       -V, --version                    Print version
 
                      ----- stderr -----
                      "###));
