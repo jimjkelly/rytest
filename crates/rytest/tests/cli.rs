@@ -108,7 +108,6 @@ fn collect_error() {
     });
 }
 
-
 #[test]
 fn collect_ignore_folder() {
     let settings = setup();

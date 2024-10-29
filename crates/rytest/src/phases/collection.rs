@@ -299,7 +299,12 @@ mod tests {
         let paths = vec!["tests/input".to_string()];
         let prefix = "test_".to_string();
         let (tx, rx) = mpsc::channel();
-        let _ = find_files(paths, vec!["tests/input/test_file.py".to_string()], prefix.as_str(), tx);
+        let _ = find_files(
+            paths,
+            vec!["tests/input/test_file.py".to_string()],
+            prefix.as_str(),
+            tx,
+        );
         let mut files: Vec<String> = rx.iter().collect();
         files.sort();
 
@@ -322,7 +327,12 @@ mod tests {
         let paths = vec!["tests/input".to_string()];
         let prefix = "test_".to_string();
         let (tx, rx) = mpsc::channel();
-        let _ = find_files(paths, vec!["tests/input/bad".to_string()], prefix.as_str(), tx);
+        let _ = find_files(
+            paths,
+            vec!["tests/input/bad".to_string()],
+            prefix.as_str(),
+            tx,
+        );
         let mut files: Vec<String> = rx.iter().collect();
         files.sort();
 

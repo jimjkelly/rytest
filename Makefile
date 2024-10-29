@@ -17,3 +17,5 @@ format:
 
 test:
 	cargo test
+
+prepush: format test
