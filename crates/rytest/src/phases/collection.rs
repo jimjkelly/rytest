@@ -33,6 +33,7 @@ pub fn find_files(
             } else {
                 entry.path()
             };
+
             if p.file_stem().unwrap().to_string_lossy().starts_with(prefix)
                 && p.extension().unwrap() == "py"
                 && !ignores.iter().any(|i| p.to_str().unwrap().starts_with(i))
@@ -285,6 +286,61 @@ mod tests {
             "tests/input/folder/test_another_file.py".to_string(),
             "tests/input/test_bad_file.py".to_string(),
             "tests/input/good/test_success.py".to_string(),
+            "tests/input/test_file.py".to_string(),
+            "tests/input/test_fixtures.py".to_string(),
+        ];
+        expected.sort();
+
+        assert_eq!(files, expected);
+    }
+
+    #[test]
+    fn test_find_files_ignore_file() {
+        let paths = vec!["tests/input".to_string()];
+        let prefix = "test_".to_string();
+        let (tx, rx) = mpsc::channel();
+        let _ = find_files(
+            paths,
+            vec!["tests/input/test_file.py".to_string()],
+            prefix.as_str(),
+            tx,
+        );
+        let mut files: Vec<String> = rx.iter().collect();
+        files.sort();
+
+        let mut expected = vec![
+            "tests/input/classes/test_classes.py".to_string(),
+            "tests/input/bad/test_other_error.py".to_string(),
+            "tests/input/bad/test_other_file.py".to_string(),
+            "tests/input/folder/test_another_file.py".to_string(),
+            "tests/input/test_bad_file.py".to_string(),
+            "tests/input/good/test_success.py".to_string(),
+            "tests/input/test_fixtures.py".to_string(),
+        ];
+        expected.sort();
+
+        assert_eq!(files, expected);
+    }
+
+    #[test]
+    fn test_find_files_ignore_folder() {
+        let paths = vec!["tests/input".to_string()];
+        let prefix = "test_".to_string();
+        let (tx, rx) = mpsc::channel();
+        let _ = find_files(
+            paths,
+            vec!["tests/input/bad".to_string()],
+            prefix.as_str(),
+            tx,
+        );
+        let mut files: Vec<String> = rx.iter().collect();
+        files.sort();
+
+        let mut expected = vec![
+            "tests/input/classes/test_classes.py".to_string(),
+            "tests/input/folder/test_another_file.py".to_string(),
+            "tests/input/good/test_success.py".to_string(),
+            "tests/input/test_bad_file.py".to_string(),
             "tests/input/test_file.py".to_string(),
             "tests/input/test_fixtures.py".to_string(),
         ];

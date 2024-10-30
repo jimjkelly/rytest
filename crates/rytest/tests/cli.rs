@@ -109,6 +109,49 @@ fn collect_error() {
 }
 
 #[test]
+fn collect_ignore_folder() {
+    let settings = setup();
+
+    settings.bind(|| {
+        assert_cmd_snapshot!(cli().arg("tests/input").arg("--collect-only").arg("--ignore").arg("tests/input/bad"), @r###"
+        success: true
+        exit_code: 0
+        ----- stdout -----
+        tests/input/classes/test_classes.py::SomeTest::test_something
+        tests/input/classes/test_classes.py::SomeTest::test_something_else
+        tests/input/classes/test_classes.py::SomeTest::test_assert_failure
+        tests/input/folder/test_another_file.py::test_another_function
+        tests/input/folder/test_another_file.py::test_function_with_decorator
+        tests/input/good/test_success.py::test_success
+        tests/input/good/test_success.py::test_more_success
+        ERROR tests/input/test_bad_file.py
+        tests/input/test_file.py::test_function_passes
+        tests/input/test_file.py::test_function_fails
+        tests/input/test_file.py::test_parameterized[1]
+        tests/input/test_file.py::test_parameterized[2]
+        tests/input/test_file.py::test_parameterized[3]
+        tests/input/test_file.py::test_parameterized_tuple[1-2]
+        tests/input/test_file.py::test_parameterized_tuple[3-4]
+        tests/input/test_file.py::test_parameterized_nested[a-1-2]
+        tests/input/test_file.py::test_parameterized_nested[a-3-4]
+        tests/input/test_file.py::test_parameterized_nested[c-1-2]
+        tests/input/test_file.py::test_parameterized_nested[c-3-4]
+        tests/input/test_file.py::test_parameterized_expression[0]
+        tests/input/test_file.py::test_parameterized_expression[1]
+        tests/input/test_file.py::test_parameterized_expression[2]
+        tests/input/test_file.py::test_parameterized_functions[round]
+        tests/input/test_file.py::test_parameterized_functions[sum]
+        tests/input/test_file.py::test_parameterized_functions[int]
+        tests/input/test_file.py::test_parameterized_functions[float]
+        tests/input/test_fixtures.py::test_fixture
+        26 tests collected, 1 error in <TIME>s
+
+        ----- stderr -----
+        "###)
+    });
+}
+
+#[test]
 fn collect() {
     let settings = setup();
 
