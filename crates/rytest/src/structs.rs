@@ -16,4 +16,5 @@ pub struct TestCase {
     pub name: String,
     pub passed: bool,
     pub error: Option<PyErr>,
+    pub parametrized: bool,
 }

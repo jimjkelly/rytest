@@ -12,3 +12,6 @@ def test_more_success():
 @pytest.fixture
 def test_fixture():
     return "fixtures starting with test_ should be ignored during test collection"
+
+def test_using_fixture(test_fixture):
+    assert test_fixture == "fixtures starting with test_ should be ignored during test collection"

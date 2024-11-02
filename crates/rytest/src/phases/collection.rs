@@ -78,6 +78,7 @@ pub fn find_tests(
                                                 name: format!("{}[{}]", node.name, param),
                                                 passed: false,
                                                 error: None,
+                                                parametrized: true,
                                             })?;
                                         }
                                     }
@@ -86,6 +87,7 @@ pub fn find_tests(
                                         name: node.name.to_string(),
                                         passed: false,
                                         error: Some(e),
+                                        parametrized: true,
                                     })?,
                                 }
                             } else {
@@ -94,6 +96,7 @@ pub fn find_tests(
                                     name: node.name.to_string(),
                                     passed: false,
                                     error: None,
+                                    parametrized: false,
                                 })?;
                             }
                         }
@@ -112,6 +115,7 @@ pub fn find_tests(
                                         name: format!("{}::{}", class, case),
                                         passed: false,
                                         error: None,
+                                        parametrized: false,
                                     })?
                                 }
                             }
@@ -129,6 +133,7 @@ pub fn find_tests(
                     " Error parsing {}",
                     e
                 ))),
+                parametrized: false,
             })?,
         }
     }
