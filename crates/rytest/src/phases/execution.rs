@@ -85,8 +85,6 @@ pub fn run_tests(rx: mpsc::Receiver<TestCase>, tx: mpsc::Sender<TestCase>) -> Re
                         // If __iter__ doesn't exist, use the value directly
                         args_vec.push(value);
                     }
-
-                    
                 } else {
                     return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
                         "No matching function found for parameter: {}",
