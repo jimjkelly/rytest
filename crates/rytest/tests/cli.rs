@@ -7,7 +7,7 @@ fn cli() -> Command {
 
 fn setup() -> insta::Settings {
     let mut settings = insta::Settings::clone_current();
-    settings.add_filter(r"in [[:xdigit:]]+\.[[:xdigit:]]{2}s", "in <TIME>s");
+    settings.add_filter(r"in [[:xdigit:]]+\.[[:xdigit:]]{2,}s", "in <TIME>s");
 
     settings
 }
@@ -62,6 +62,7 @@ fn collect_errors() {
         tests/input/folder/test_another_file.py::test_function_with_decorator
         tests/input/good/test_success.py::test_success
         tests/input/good/test_success.py::test_more_success
+        tests/input/good/test_success.py::test_using_fixture
         ERROR tests/input/test_bad_file.py
         tests/input/test_file.py::test_function_passes
         tests/input/test_file.py::test_function_fails
@@ -82,7 +83,7 @@ fn collect_errors() {
         tests/input/test_file.py::test_parameterized_functions[int]
         tests/input/test_file.py::test_parameterized_functions[float]
         tests/input/test_fixtures.py::test_fixture
-        28 tests collected, 2 errors in <TIME>s
+        29 tests collected, 2 errors in <TIME>s
 
         ----- stderr -----
         "###)
@@ -124,6 +125,7 @@ fn collect_ignore_folder() {
         tests/input/folder/test_another_file.py::test_function_with_decorator
         tests/input/good/test_success.py::test_success
         tests/input/good/test_success.py::test_more_success
+        tests/input/good/test_success.py::test_using_fixture
         ERROR tests/input/test_bad_file.py
         tests/input/test_file.py::test_function_passes
         tests/input/test_file.py::test_function_fails
@@ -144,7 +146,7 @@ fn collect_ignore_folder() {
         tests/input/test_file.py::test_parameterized_functions[int]
         tests/input/test_file.py::test_parameterized_functions[float]
         tests/input/test_fixtures.py::test_fixture
-        26 tests collected, 1 error in <TIME>s
+        27 tests collected, 1 error in <TIME>s
 
         ----- stderr -----
         "###)
@@ -157,14 +159,34 @@ fn collect() {
 
     settings.bind(|| {
         assert_cmd_snapshot!(cli().arg("tests/input/good").arg("--collect-only"), @r###"
-                     success: true
-                     exit_code: 0
-                     ----- stdout -----
-                     tests/input/good/test_success.py::test_success
-                     tests/input/good/test_success.py::test_more_success
-                     2 tests collected in <TIME>s
+        success: true
+        exit_code: 0
+        ----- stdout -----
+        tests/input/good/test_success.py::test_success
+        tests/input/good/test_success.py::test_more_success
+        tests/input/good/test_success.py::test_using_fixture
+        3 tests collected in <TIME>s
 
-                     ----- stderr -----
-                     "###)
+        ----- stderr -----
+        "###)
+    });
+}
+
+#[test]
+fn test() {
+    let settings = setup();
+
+    settings.bind(|| {
+        assert_cmd_snapshot!(cli().arg("tests/input/good").arg("-v"), @r###"
+        success: true
+        exit_code: 0
+        ----- stdout -----
+        tests/input/good/test_success.py::test_success - PASSED
+        tests/input/good/test_success.py::test_more_success - PASSED
+        tests/input/good/test_success.py::test_using_fixture - PASSED
+        3 passed, 0 failed in <TIME>s
+
+        ----- stderr -----
+        "###)
     });
 }
