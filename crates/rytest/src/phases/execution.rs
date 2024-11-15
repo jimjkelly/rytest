@@ -12,7 +12,7 @@ pub fn run_tests(rx: mpsc::Receiver<TestCase>, tx: mpsc::Sender<TestCase>) -> Re
             // skip parametrized function since they are not supported yet
             test.passed = false;
             test.error = Some(PyErr::new::<pyo3::exceptions::PyNotImplementedError, _>(
-                format!("Parametrized tests are not supported yet",),
+                "Parametrized tests are not supported yet".to_string(),
             ));
             tx.send(test)?;
             continue;
@@ -74,7 +74,7 @@ pub fn run_tests(rx: mpsc::Receiver<TestCase>, tx: mpsc::Sender<TestCase>) -> Re
                             match iterator.getattr(py, "__next__")?.call0(py) {
                                 Ok(next_value) => {
                                     args_vec.push(next_value);
-                                    generators.push(iterator.into());
+                                    generators.push(iterator);
                                 }
                                 Err(err) => {
                                     return Err(err);
