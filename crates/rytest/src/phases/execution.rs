@@ -1,6 +1,6 @@
 use anyhow::Result;
 use pyo3::prelude::*;
-use pyo3::types::{PyList, PyMapping, PyString};
+use pyo3::types::{PyIterator, PyList, PyMapping, PyString};
 use pyo3::{indoc::indoc, types::PyTuple};
 use std::{env, fs, path::Path, sync::mpsc};
 
@@ -54,6 +54,8 @@ pub fn run_tests(rx: mpsc::Receiver<TestCase>, tx: mpsc::Sender<TestCase>) -> Re
 
             // Prepare a vector to hold the positional arguments
             let mut args_vec: Vec<PyObject> = Vec::new();
+            // Prepare a vector to hold the generators to run after the fixture is called
+            let mut generators: Vec<Py<PyAny>> = Vec::new();
 
             for item in parameters.items()?.iter()? {
                 let item = item?;
@@ -64,7 +66,27 @@ pub fn run_tests(rx: mpsc::Receiver<TestCase>, tx: mpsc::Sender<TestCase>) -> Re
                 if let Ok(func) = module.getattr(param_name_py) {
                     // If a matching function is found, call it and store the result in args_vec
                     let value: PyObject = func.call0()?.into();
-                    args_vec.push(value);
+                    let value_iter: Result<Py<PyIterator>, PyErr> = value.extract(py);
+                    if value_iter.is_ok() {
+                        // call next on the iterator to get the value
+                        if let Ok(iterator) = value.getattr(py, "__iter__")?.call0(py) {
+                            // Attempt to call __next__ to get the actual value from the generator/iterator
+                            match iterator.getattr(py, "__next__")?.call0(py) {
+                                Ok(next_value) => {
+                                    args_vec.push(next_value);
+                                    generators.push(iterator.into());
+                                }
+                                Err(err) => {
+                                    return Err(err);
+                                }
+                            }
+                        }
+                    } else {
+                        // If __iter__ doesn't exist, use the value directly
+                        args_vec.push(value);
+                    }
+
+                    
                 } else {
                     return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
                         "No matching function found for parameter: {}",
@@ -76,7 +98,14 @@ pub fn run_tests(rx: mpsc::Receiver<TestCase>, tx: mpsc::Sender<TestCase>) -> Re
             // Create a PyTuple from the arguments vector
             let args_tuple = PyTuple::new_bound(py, &args_vec);
 
-            function.call1(py, args_tuple)
+            let test_result = function.call1(py, args_tuple);
+            // Execute remaining generator items (optional)
+            for generator in generators {
+                while let Ok(_next_item) = generator.getattr(py, "__next__")?.call0(py) {
+                    // just eat the result
+                }
+            }
+            test_result
         });
 
         test.passed = result.is_ok();
