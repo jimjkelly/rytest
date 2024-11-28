@@ -12,7 +12,7 @@ authors = [
     {name = "Jim Kelly"},
     {name = "Aatish Neupane"}
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 dependencies = [
     "pytest>=7.0.0,<8.0.0"
 ]
@@ -26,8 +26,11 @@ classifiers = [
     "Operating System :: POSIX",
     "Operating System :: Unix",
     "Programming Language :: Python :: 3 :: Only",
+    "Programming Langauge :: Python :: 3.9",
+    "Programming Langauge :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Programming Language :: Rust",
     "Topic :: Software Development :: Testing",
     "Topic :: Utilities",

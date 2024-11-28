@@ -1,11 +1,11 @@
 [package]
 name = "rytest-render-benchmark"
-version = "0.0.0"
 description = "Render benchmarks for rytest"
 publish = false
 
 edition = { workspace = true }
 rust-version = { workspace = true }
+version = { workspace = true }
 homepage = { workspace = true }
 documentation = { workspace = true }
 repository = { workspace = true }

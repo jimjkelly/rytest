@@ -3,6 +3,7 @@ name = "rytest"
 description = "rytest is a reasonably fast, somewhat Pytest compatible Python test runner."
 edition = { workspace = true }
 rust-version = { workspace = true }
+version = { workspace = true }
 homepage = { workspace = true }
 documentation = { workspace = true }
 repository = { workspace = true }
