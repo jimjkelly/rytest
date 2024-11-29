@@ -9,6 +9,7 @@ documentation = { workspace = true }
 repository = { workspace = true }
 authors = { workspace = true }
 license = { workspace = true }
+default-run = "rytest"
 
 [dependencies]
 anyhow = { workspace = true }
@@ -24,5 +25,5 @@ predicates = "2"
 pretty_assertions = "1.4.0"
 
 [dependencies.pyo3]
-version = "0.21.2"
+version = "0.22.6"
 features = ["auto-initialize"]
