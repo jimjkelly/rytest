@@ -44,9 +44,12 @@ jobs:
         uses: PyO3/maturin-action@main
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist
+          args: --release --locked --out dist --find-interpreter
           sccache: 'true'
           manylinux: auto
+          before-script-linux: |
+            # Install the .so
+            apt update -y && apt-get install -y libpython3-dev
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
@@ -75,7 +78,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --find-interpreter
+          args: --release --locked --out dist --find-interpreter
           sccache: 'true'
           manylinux: musllinux_1_2
       - name: Upload wheels
@@ -103,7 +106,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --find-interpreter
+          args: --release --locked --out dist --find-interpreter
           sccache: 'true'
       - name: Upload wheels
         uses: actions/upload-artifact@v4
@@ -129,7 +132,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --find-interpreter
+          args: --release --locked --out dist --find-interpreter
           sccache: 'true'
       - name: Upload wheels
         uses: actions/upload-artifact@v4
