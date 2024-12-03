@@ -6,6 +6,7 @@ use std::thread;
 use std::time::Instant;
 
 mod phases;
+mod python;
 mod structs;
 
 pub use crate::phases::collection;
@@ -32,11 +33,11 @@ pub fn get_args() -> Result<Config> {
                 .default_value("test_"),
         )
         .arg(
-            Arg::new("test_prefix")
-                .short('p')
-                .long("test-prefix")
-                .help("The prefix to search for to indicate a function is a test")
-                .default_value("test_"),
+            Arg::new("files")
+                .value_name("FILE")
+                .help("Input file(s)")
+                .default_value(".")
+                .num_args(1..),
         )
         .arg(
             Arg::new("ignore")
@@ -46,11 +47,17 @@ pub fn get_args() -> Result<Config> {
                 .default_value(".venv"),
         )
         .arg(
-            Arg::new("files")
-                .value_name("FILE")
-                .help("Input file(s)")
-                .default_value(".")
-                .num_args(1..),
+            Arg::new("info")
+                .long("info")
+                .help("Print information about rytest and the python environment it is running in.")
+                .action(clap::ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("test_prefix")
+                .short('p')
+                .long("test-prefix")
+                .help("The prefix to search for to indicate a function is a test")
+                .default_value("test_"),
         )
         .arg(
             Arg::new("verbose")
@@ -67,10 +74,6 @@ pub fn get_args() -> Result<Config> {
             .get_one::<String>("file_prefix")
             .unwrap()
             .to_string(),
-        test_prefix: matches
-            .get_one::<String>("test_prefix")
-            .unwrap()
-            .to_string(),
         files: matches
             .get_many::<String>("files")
             .unwrap()
@@ -81,12 +84,21 @@ pub fn get_args() -> Result<Config> {
             .unwrap()
             .map(|s| s.to_string())
             .collect(),
+        info: matches.get_flag("info"),
+        test_prefix: matches
+            .get_one::<String>("test_prefix")
+            .unwrap()
+            .to_string(),
         verbose: matches.get_flag("verbose"),
     })
 }
 
 pub fn run(config: Config) -> Result<()> {
     let start = Instant::now();
+
+    if config.info {
+        info()?;
+    }
 
     let (tx_files, rx_files) = mpsc::channel();
     let (tx_tests, rx_tests) = mpsc::channel();
@@ -132,6 +144,17 @@ pub fn run(config: Config) -> Result<()> {
         });
         handle_output.join().unwrap();
     }
+
+    Ok(())
+}
+
+fn info() -> Result<()> {
+    println!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+    let pyinfo = python::get_info()?;
+
+    println!("Python executable: {:?}", pyinfo.executable);
+    println!("Python version: {}", pyinfo.version);
+    println!("Python path: {:?}", pyinfo.path);
 
     Ok(())
 }

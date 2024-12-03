@@ -1,9 +1,10 @@
 use anyhow::Result;
 use pyo3::prelude::*;
-use pyo3::types::{PyIterator, PyList, PyMapping, PyString};
+use pyo3::types::{PyIterator, PyMapping, PyString};
 use pyo3::{indoc::indoc, types::PyTuple};
 use std::{env, fs, path::Path, sync::mpsc};
 
+use crate::python;
 use crate::TestCase;
 
 pub fn run_tests(rx: mpsc::Receiver<TestCase>, tx: mpsc::Sender<TestCase>) -> Result<()> {
@@ -31,16 +32,9 @@ pub fn run_tests(rx: mpsc::Receiver<TestCase>, tx: mpsc::Sender<TestCase>) -> Re
         py_code.insert_str(0, s1);
 
         let result = Python::with_gil(|py| -> PyResult<Py<PyAny>> {
-            let syspath = py
-                .import_bound("sys")
-                .unwrap()
-                .getattr("path")
-                .unwrap()
-                .downcast_into::<PyList>()
-                .unwrap();
+            let syspath = python::setup(&py, current_dir);
 
             syspath.insert(0, path).unwrap();
-            syspath.insert(0, current_dir).unwrap();
 
             let module = PyModule::from_code_bound(py, &py_code, "", "")?;
             let function: Py<PyAny> = module.getattr(test.name.as_str())?.into();
@@ -163,27 +157,8 @@ pub fn get_parametrizations(path: &str, name: &str) -> Result<Vec<String>, PyErr
     py_code.insert_str(0, s1);
 
     let result = Python::with_gil(|py| -> PyResult<Vec<String>> {
-        let syspath = py
-            .import_bound("sys")
-            .unwrap()
-            .getattr("path")
-            .unwrap()
-            .downcast_into::<PyList>()
-            .unwrap();
+        let syspath = python::setup(&py, current_dir);
 
-        let venv = env::var("VIRTUAL_ENV");
-        if venv.is_ok() {
-            let venv = venv.unwrap();
-            let venv_path = Path::new(&venv);
-            let version = py.version_info();
-            let site_packages = venv_path.join(format!(
-                "lib/python{}.{}/site-packages",
-                version.major, version.minor
-            ));
-            syspath.insert(0, site_packages).unwrap();
-        }
-
-        syspath.insert(0, current_dir).unwrap();
         syspath.insert(0, path).unwrap();
 
         let module = PyModule::from_code_bound(py, &py_code, "", "");

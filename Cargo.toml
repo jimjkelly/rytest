@@ -5,6 +5,7 @@ resolver = "2"
 [workspace.package]
 edition = "2021"
 rust-version = "1.81"
+version = "0.1.0"
 homepage = "https://github.com/jimjkelly/rytest"
 documentation = "https://github.com/jimjkelly/rytest"
 repository = "https://github.com/jimjkelly/rytest"
