@@ -23,8 +23,6 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: MacOS",
     "Operating System :: Microsoft :: Windows",
-    "Operating System :: POSIX",
-    "Operating System :: Unix",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Langauge :: Python :: 3.9",
     "Programming Langauge :: Python :: 3.10",
