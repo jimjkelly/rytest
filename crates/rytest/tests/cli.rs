@@ -50,7 +50,7 @@ fn collect_errors() {
     let settings = setup();
 
     settings.bind(|| {
-        assert_cmd_snapshot!(cli().arg("tests").arg("--collect-only"), @r###"
+        assert_cmd_snapshot!(cli().arg("tests").arg("--collect-only"), @r"
         success: true
         exit_code: 0
         ----- stdout -----
@@ -85,10 +85,11 @@ fn collect_errors() {
         tests/input/test_file.py::test_parameterized_functions[int]
         tests/input/test_file.py::test_parameterized_functions[float]
         tests/input/test_fixtures.py::test_fixture
-        29 tests collected, 2 errors in <TIME>s
+        tests/input/test_fixtures.py::test_fixture_outer_scope
+        30 tests collected, 2 errors in <TIME>s
 
         ----- stderr -----
-        "###)
+        ")
     });
 }
 
@@ -116,7 +117,7 @@ fn collect_ignore_folder() {
     let settings = setup();
 
     settings.bind(|| {
-        assert_cmd_snapshot!(cli().arg("tests/input").arg("--collect-only").arg("--ignore").arg("tests/input/bad"), @r###"
+        assert_cmd_snapshot!(cli().arg("tests/input").arg("--collect-only").arg("--ignore").arg("tests/input/bad"), @r"
         success: true
         exit_code: 0
         ----- stdout -----
@@ -148,10 +149,11 @@ fn collect_ignore_folder() {
         tests/input/test_file.py::test_parameterized_functions[int]
         tests/input/test_file.py::test_parameterized_functions[float]
         tests/input/test_fixtures.py::test_fixture
-        27 tests collected, 1 error in <TIME>s
+        tests/input/test_fixtures.py::test_fixture_outer_scope
+        28 tests collected, 1 error in <TIME>s
 
         ----- stderr -----
-        "###)
+        ")
     });
 }
 
