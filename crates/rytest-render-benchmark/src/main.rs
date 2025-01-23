@@ -16,9 +16,7 @@ use serde::Deserialize;
 use tagu::prelude::*;
 
 #[derive(Parser)]
-#[clap(
-    about = "Renders benchmark output into a pretty image.",
-)]
+#[clap(about = "Renders benchmark output into a pretty image.")]
 struct Args {
     /// Path to a JSON output from a `hyperfine` benchmark.
     path: PathBuf,

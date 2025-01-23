@@ -19,9 +19,7 @@ mod git;
 mod uv;
 
 #[derive(Parser)]
-#[clap(
-    about = "Run e2e tests for the rytest project.",
-)]
+#[clap(about = "Run e2e tests for the rytest project.")]
 struct Args {
     repository: String,
     requirements: String,
@@ -49,7 +47,6 @@ fn run(args: &Args) -> Result<()> {
 
     Ok(())
 }
-
 
 fn main() {
     let args = Args::parse();

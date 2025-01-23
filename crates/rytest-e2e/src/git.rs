@@ -1,8 +1,6 @@
-
 use std::{path::Path, process::Command};
 
 use anyhow::Result;
-
 
 pub(crate) fn clone(repository: &str, dest: &Path) -> Result<(), anyhow::Error> {
     let mut command = Command::new("git");
@@ -16,7 +14,7 @@ pub(crate) fn clone(repository: &str, dest: &Path) -> Result<(), anyhow::Error> 
 
         println!("Cloning {} to {}", repository, dest_str);
 
-        let mut child = command.args(&["clone", repository, dest_str]).spawn()?;
+        let mut child = command.args(["clone", repository, dest_str]).spawn()?;
         child.wait()?;
     } else {
         println!("Skipping clone of {}, already exists.", repository);
