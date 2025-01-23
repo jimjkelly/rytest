@@ -16,7 +16,10 @@ use serde::Deserialize;
 use tagu::prelude::*;
 
 #[derive(Parser)]
-pub(crate) struct Args {
+#[clap(
+    about = "Renders benchmark output into a pretty image.",
+)]
+struct Args {
     /// Path to a JSON output from a `hyperfine` benchmark.
     path: PathBuf,
     /// Title of the plot.
@@ -24,7 +27,7 @@ pub(crate) struct Args {
     title: Option<String>,
 }
 
-pub(crate) fn render_benchmarks(args: &Args) -> Result<()> {
+fn render_benchmarks(args: &Args) -> Result<()> {
     let mut results: BenchmarkResults = serde_json::from_slice(&fs_err::read(&args.path)?)?;
 
     // Replace the command with a shorter name. (The command typically includes the benchmark name,

@@ -4,7 +4,7 @@ resolver = "2"
 
 [workspace.package]
 edition = "2021"
-rust-version = "1.81"
+rust-version = "1.83"
 version = "0.1.0"
 homepage = "https://github.com/jimjkelly/rytest"
 documentation = "https://github.com/jimjkelly/rytest"
@@ -13,8 +13,6 @@ authors = ["rytest Developers"]
 license = "MIT"
 
 [workspace.dependencies]
-rytest = { path = "crates/rytest" }
-rytest-render-benchmark = { path = "crates/rytest-render-benchmark" }
 anyhow = "1.0.86"
 clap = "4.5.19"
 
