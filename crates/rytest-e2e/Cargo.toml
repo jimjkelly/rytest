@@ -1,0 +1,18 @@
+[package]
+name = "rytest-e2e"
+description = "E2E Testing of Rytest Against Common Real-World Python Projects"
+publish = false
+
+edition = { workspace = true }
+rust-version = { workspace = true }
+version = { workspace = true }
+homepage = { workspace = true }
+documentation = { workspace = true }
+repository = { workspace = true }
+authors = { workspace = true }
+license = { workspace = true }
+
+[dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true, features = ["derive", "wrap_help"] }
+url = "2.5.4"
