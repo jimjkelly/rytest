@@ -42,7 +42,11 @@ pub(crate) fn develop(path: &Path) -> Result<(), anyhow::Error> {
     cmd(&["pip", "install", "-e", "."], path)
 }
 
-pub(crate) fn run(path: &std::path::Path, command: &str, testdir: Option<&str>) -> Result<(), anyhow::Error> {
+pub(crate) fn run(
+    path: &std::path::Path,
+    command: &str,
+    testdir: Option<&str>,
+) -> Result<(), anyhow::Error> {
     let mut args = vec!["run", command];
 
     if let Some(testdir) = testdir {

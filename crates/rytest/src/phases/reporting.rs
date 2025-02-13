@@ -4,7 +4,7 @@ use std::{sync::mpsc, time::Instant};
 
 use crate::TestCase;
 
-pub fn output_collect(rx: mpsc::Receiver<TestCase>, start: Instant, verbose: bool) -> Result<()> {
+pub fn output_collect(rx: mpsc::Receiver<TestCase>, start: Instant) -> Result<()> {
     let mut collected = 0;
     let mut errors = 0;
 
@@ -14,9 +14,15 @@ pub fn output_collect(rx: mpsc::Receiver<TestCase>, start: Instant, verbose: boo
                 if test.name.is_empty() {
                     println!("{} {}", "ERROR".red(), test.file.red());
                 } else {
-                    println!("{} {}{}{}", "ERROR".red(), test.file.red(), "::".red(), test.name.red());
+                    println!(
+                        "{} {}{}{}",
+                        "ERROR".red(),
+                        test.file.red(),
+                        "::".red(),
+                        test.name.red()
+                    );
                 }
-                
+
                 println!("{}", error.to_string().red());
                 errors += 1
             }
@@ -44,7 +50,7 @@ pub fn output_collect(rx: mpsc::Receiver<TestCase>, start: Instant, verbose: boo
     Ok(())
 }
 
-pub fn output_results(rx: mpsc::Receiver<TestCase>, start: Instant, verbose: bool) -> Result<()> {
+pub fn output_results(rx: mpsc::Receiver<TestCase>, start: Instant) -> Result<()> {
     let mut passed = 0;
     let mut failed = 0;
 
@@ -53,7 +59,11 @@ pub fn output_results(rx: mpsc::Receiver<TestCase>, start: Instant, verbose: boo
             "{}::{} - {}",
             result.file,
             result.name,
-            if result.passed { "PASSED".green() } else { "FAILED".red() }
+            if result.passed {
+                "PASSED".green()
+            } else {
+                "FAILED".red()
+            }
         );
         if result.passed {
             passed += 1;

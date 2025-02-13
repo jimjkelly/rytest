@@ -206,10 +206,11 @@ fn test_relative_imports() {
         success: true
         exit_code: 0
         ----- stdout -----
-        tests/input/good/test_success.py::test_success - PASSED
-        tests/input/good/test_success.py::test_more_success - PASSED
-        tests/input/good/test_success.py::test_using_fixture - PASSED
-        3 passed, 0 failed in <TIME>s
+        tests/input/folder/test_another_file.py::test_another_function - FAILED
+        ImportError: attempted relative import with no known parent package
+        tests/input/folder/test_another_file.py::test_function_with_decorator - FAILED
+        ImportError: attempted relative import with no known parent package
+        0 passed, 2 failed in <TIME>s
 
         ----- stderr -----
         "###)

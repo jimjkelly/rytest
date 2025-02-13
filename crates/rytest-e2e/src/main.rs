@@ -41,8 +41,12 @@ fn run(args: &Args) -> Result<()> {
 
     let dir = dirs::get(segments.collect::<Vec<&str>>())?;
     let dir = dir.as_path();
-    
-    println!("Running e2e tests for repository: {} in {}", repository, dir.display());
+
+    println!(
+        "Running e2e tests for repository: {} in {}",
+        repository,
+        dir.display()
+    );
     git::clone(repository, dir)?;
     uv::install(dir, requirements)?;
     uv::develop(dir)?;
