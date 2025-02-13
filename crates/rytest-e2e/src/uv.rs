@@ -30,7 +30,7 @@ fn cmd(args: &[&str], path: &Path) -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-pub(crate) fn setup(path: &Path, requirements: &std::path::Path) -> Result<(), anyhow::Error> {
+pub(crate) fn install(path: &Path, requirements: &std::path::Path) -> Result<(), anyhow::Error> {
     let requirements_str = requirements
         .to_str()
         .ok_or_else(|| anyhow::anyhow!("Invalid path: {:?}", requirements))?;
@@ -38,6 +38,16 @@ pub(crate) fn setup(path: &Path, requirements: &std::path::Path) -> Result<(), a
     cmd(&["pip", "install", "-r", requirements_str], path)
 }
 
-pub(crate) fn run(path: &std::path::Path, command: &str) -> Result<(), anyhow::Error> {
-    cmd(&["run", command], path)
+pub(crate) fn develop(path: &Path) -> Result<(), anyhow::Error> {
+    cmd(&["pip", "install", "-e", "."], path)
+}
+
+pub(crate) fn run(path: &std::path::Path, command: &str, testdir: Option<&str>) -> Result<(), anyhow::Error> {
+    let mut args = vec!["run", command];
+
+    if let Some(testdir) = testdir {
+        args.push(testdir);
+    }
+
+    cmd(&args, path)
 }

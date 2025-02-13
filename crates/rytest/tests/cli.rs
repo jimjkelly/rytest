@@ -55,6 +55,7 @@ fn collect_errors() {
         exit_code: 0
         ----- stdout -----
         ERROR tests/input/bad/test_other_error.py
+        SyntaxError:  Error parsing expected an indented block at byte offset 30
         tests/input/bad/test_other_file.py::test_function_passes
         tests/input/bad/test_other_file.py::test_function_fails
         tests/input/classes/test_classes.py::SomeTest::test_something
@@ -66,6 +67,7 @@ fn collect_errors() {
         tests/input/good/test_success.py::test_more_success
         tests/input/good/test_success.py::test_using_fixture
         ERROR tests/input/test_bad_file.py
+        SyntaxError:  Error parsing expected an indented block at byte offset 31
         tests/input/test_file.py::test_function_passes
         tests/input/test_file.py::test_function_fails
         tests/input/test_file.py::test_parameterized[1]
@@ -98,16 +100,17 @@ fn collect_error() {
 
     settings.bind(|| {
         assert_cmd_snapshot!(cli().arg("tests/input/bad").arg("--collect-only"), @r###"
-                     success: true
-                     exit_code: 0
-                     ----- stdout -----
-                     ERROR tests/input/bad/test_other_error.py
-                     tests/input/bad/test_other_file.py::test_function_passes
-                     tests/input/bad/test_other_file.py::test_function_fails
-                     2 tests collected, 1 error in <TIME>s
+        success: true
+        exit_code: 0
+        ----- stdout -----
+        ERROR tests/input/bad/test_other_error.py
+        SyntaxError:  Error parsing expected an indented block at byte offset 30
+        tests/input/bad/test_other_file.py::test_function_passes
+        tests/input/bad/test_other_file.py::test_function_fails
+        2 tests collected, 1 error in <TIME>s
 
-                     ----- stderr -----
-                     "###)
+        ----- stderr -----
+        "###)
     });
 }
 
@@ -129,6 +132,7 @@ fn collect_ignore_folder() {
         tests/input/good/test_success.py::test_more_success
         tests/input/good/test_success.py::test_using_fixture
         ERROR tests/input/test_bad_file.py
+        SyntaxError:  Error parsing expected an indented block at byte offset 31
         tests/input/test_file.py::test_function_passes
         tests/input/test_file.py::test_function_fails
         tests/input/test_file.py::test_parameterized[1]
@@ -180,6 +184,25 @@ fn test() {
 
     settings.bind(|| {
         assert_cmd_snapshot!(cli().arg("tests/input/good").arg("-v"), @r###"
+        success: true
+        exit_code: 0
+        ----- stdout -----
+        tests/input/good/test_success.py::test_success - PASSED
+        tests/input/good/test_success.py::test_more_success - PASSED
+        tests/input/good/test_success.py::test_using_fixture - PASSED
+        3 passed, 0 failed in <TIME>s
+
+        ----- stderr -----
+        "###)
+    });
+}
+
+#[test]
+fn test_relative_imports() {
+    let settings = setup();
+
+    settings.bind(|| {
+        assert_cmd_snapshot!(cli().arg("tests/input/folder").arg("-v"), @r###"
         success: true
         exit_code: 0
         ----- stdout -----
