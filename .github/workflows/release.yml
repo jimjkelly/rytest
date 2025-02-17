@@ -91,7 +91,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential python3-dev
+          sudo apt-get install -y build-essential python3-dev gcc-aarch64-linux-gnu lld
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
