@@ -1,4 +1,4 @@
-
+from .utils import util
 
 def test_another_function():
     pass
@@ -19,4 +19,7 @@ def accepts(*types):
 
 @accepts(int, (int, float))
 def test_function_with_decorator(arg1, arg2):
-    pass
+    try:
+        util()
+    except AssertionError:
+        pass

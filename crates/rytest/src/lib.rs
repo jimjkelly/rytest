@@ -135,12 +135,12 @@ pub fn run(config: Config) -> Result<()> {
 
         let handle_output = thread::spawn(move || {
             let rx_results = rx_results;
-            reporting::output_results(rx_results, start, config.verbose).unwrap();
+            reporting::output_results(rx_results, start).unwrap();
         });
         handle_output.join().unwrap();
     } else {
         let handle_output = thread::spawn(move || {
-            reporting::output_collect(rx_tests, start, config.verbose).unwrap();
+            reporting::output_collect(rx_tests, start).unwrap();
         });
         handle_output.join().unwrap();
     }

@@ -24,12 +24,14 @@ struct Args {
     repository: String,
     requirements: String,
     command: String,
+    directory: Option<String>,
 }
 
 fn run(args: &Args) -> Result<()> {
     let repository = &args.repository;
     let requirements = Path::new(&args.requirements);
     let command = &args.command;
+    let testdir = args.directory.as_deref();
 
     let url = Url::parse(repository)?;
     let segments = match url.path_segments() {
@@ -40,10 +42,15 @@ fn run(args: &Args) -> Result<()> {
     let dir = dirs::get(segments.collect::<Vec<&str>>())?;
     let dir = dir.as_path();
 
-    println!("Running e2e tests for repository: {}", repository);
+    println!(
+        "Running e2e tests for repository: {} in {}",
+        repository,
+        dir.display()
+    );
     git::clone(repository, dir)?;
-    uv::setup(dir, requirements)?;
-    uv::run(dir, command)?;
+    uv::install(dir, requirements)?;
+    uv::develop(dir)?;
+    uv::run(dir, command, testdir)?;
 
     Ok(())
 }
