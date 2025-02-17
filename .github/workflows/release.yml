@@ -95,7 +95,7 @@ jobs:
           sudo apt-get install -y build-essential python3-dev libpython3.9-dev:arm64 gcc-10-aarch64-linux-gnu lld
       - name: Build wheels
         uses: PyO3/maturin-action@v1
-        with:
+        with: 
           target: ${{matrix.platform.target}}
           use-cross: true
           args: --release --locked --out dist --find-interpreter
