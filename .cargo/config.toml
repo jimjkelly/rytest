@@ -1,3 +1,5 @@
 [alias]
 render-benchmark = "run --package rytest-render-benchmark"
 e2e = "run --package rytest-e2e"
+[target.aarch64-unknown-linux-gnu]
+linker = "aarch64-linux-gnu-gcc-10"
