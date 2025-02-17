@@ -71,6 +71,41 @@ jobs:
           name: wheels-macos-${{ matrix.platform.target }}
           path: dist
 
+  linux:
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      matrix:
+        platform:
+          - runner: ubuntu-latest
+            target: x86_64
+            cross: false
+          - runner: ubuntu-latest
+            target: aarch64
+            cross: true
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3-dev libpython3.9-dev:arm64 gcc-10-aarch64-linux-gnu lld
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with: 
+          target: ${{matrix.platform.target}}
+          use-cross: true
+          args: --release --locked --out dist --find-interpreter
+          rustflags: "-C linker=aarch64-linux-gnu-gcc-10 -L/usr/lib/aarch64-linux-gnu"
+          sccache: 'true'
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-linux-${{ matrix.platform.target }}
+          path: dist
+
   sdist:
     runs-on: ubuntu-latest
     steps:
