@@ -1,6 +1,6 @@
 [package]
-name = "rytest"
-description = "rytest is a reasonably fast, somewhat Pytest compatible Python test runner."
+name = "rytest-collector-plugin"
+description = "A pytest collection plugin from rytest"
 edition = { workspace = true }
 rust-version = { workspace = true }
 version = { workspace = true }
@@ -9,20 +9,9 @@ documentation = { workspace = true }
 repository = { workspace = true }
 authors = { workspace = true }
 license = { workspace = true }
-default-run = "rytest"
 
 [dependencies]
 anyhow = { workspace = true }
-clap = { workspace = true}
-notify = "6.1.1"
-rustpython-parser = "0.3.1"
-walkdir = "2.5.0"
-
-[dev-dependencies]
-insta = { version = "1.39.0", features = ["filters", "yaml"] }
-insta-cmd = "0.6.0"
-predicates = "2"
-pretty_assertions = "1.4.0"
 
 [dependencies.pyo3]
 version = "0.23.3"
