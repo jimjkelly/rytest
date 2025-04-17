@@ -14,7 +14,8 @@ authors = [
 ]
 requires-python = ">=3.9,<3.13"
 dependencies = [
-    "pytest>=8.0.0,<9.0.0"
+    "pytest>=8.0.0,<9.0.0",
+    "flask"
 ]
 classifiers = [
     "Development Status :: 1 - Planning",
@@ -41,5 +42,9 @@ urls.Tracker = "https://github.com/jimjkelly/rytest/issues"
 
 
 [tool.maturin]
-bindings = "bin"
-manifest-path = "crates/rytest/Cargo.toml"
+manifest-path = "crates/rytest-lib/Cargo.toml"
+features = ["pyo3/extension-module"]
+
+[tool.uv]
+cache-keys = [{file = "pyproject.toml"}, {file = "Cargo.toml"}, {file = "creates/rytest-lib/Cargo.toml"}, {file = "**/*.rs"}]
+config-settings = { build-args = '--profile=dev' }

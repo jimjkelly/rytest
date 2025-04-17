@@ -10,9 +10,11 @@ repository = { workspace = true }
 authors = { workspace = true }
 license = { workspace = true }
 
+[lib]
+name = "rytest"
+crate-type = ["cdylib"]
+
 [dependencies]
 anyhow = { workspace = true }
-
-[dependencies.pyo3]
-version = "0.23.3"
-features = ["auto-initialize"]
+pyo3 = { version = "0.22.6", features = ["extension-module"] }
+walkdir = "2.5.0"

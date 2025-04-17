@@ -25,5 +25,5 @@ predicates = "2"
 pretty_assertions = "1.4.0"
 
 [dependencies.pyo3]
-version = "0.23.3"
+version = "0.22.6"
 features = ["auto-initialize"]

@@ -105,3 +105,22 @@ These will all be run in CI to validate your code.
 We wanted to thank the Astral team for providing a great example of how to
 manage a lot of the scaffold around a Rust/Python project, which has alllowed
 us to focus on the core of rytest.
+
+
+
+### WTF
+
+okay so right now trying to figure out how to run tests for the plugin and update
+
+steps:
+
+- maturin develop
+- uv sync?
+
+doesn't seem to work
+
+- maturin develop --uv
+
+and I added a think to my pyproject.toml to rebuild when it detects changes
+
+uv run pytest pytest_plugin/tests --collect-only -vvv

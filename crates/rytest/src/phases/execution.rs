@@ -51,8 +51,8 @@ pub fn run_tests(rx: mpsc::Receiver<TestCase>, tx: mpsc::Sender<TestCase>) -> Re
             // Prepare a vector to hold the generators to run after the fixture is called
             let mut generators: Vec<Py<PyAny>> = Vec::new();
 
-            for item in parameters.items()?.iter() {
-                let item = item.as_unbound();
+            for item in parameters.items()?.iter()? {
+                let item = item?;
                 let param_name_obj = item.get_item(0)?; // First item is the parameter name
                 let param_name: String = param_name_obj.extract()?;
                 let param_name_py = PyString::new_bound(py, &param_name);
