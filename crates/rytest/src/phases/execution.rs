@@ -1,11 +1,101 @@
 use anyhow::Result;
 use pyo3::prelude::*;
-use pyo3::types::{PyIterator, PyMapping, PyString};
+use pyo3::types::{PyIterator, PyMapping};
 use pyo3::{indoc::indoc, types::PyTuple};
+use std::path::PathBuf;
 use std::{env, fs, path::Path, sync::mpsc};
 
 use crate::python;
 use crate::TestCase;
+
+fn file_contains_fixture(file_path: &Path, fixture_name: &str) -> bool {
+    if let Ok(content) = fs::read_to_string(file_path) {
+        let def_pattern = format!("def {}(", fixture_name);
+        let fixture_pattern = format!("fixture(name=\"{}\")", fixture_name);
+        return content.contains(&def_pattern) || content.contains(&fixture_pattern);
+    }
+    false
+}
+
+fn find_fixture_reversely(
+    start_path: &Path,
+    fixture_name: &str,
+    stop_path: &PathBuf,
+) -> Option<PathBuf> {
+    let mut current_path = start_path.to_path_buf();
+
+    // Check if start_path is a file and search it first
+    if current_path.is_file() {
+        if file_contains_fixture(&current_path, fixture_name) {
+            return Some(current_path);
+        }
+        // Move to the parent directory if the start path was a file
+        current_path.pop();
+    }
+
+    // Begin directory traversal
+    loop {
+        //n!("Checking directory for fixture {}: {:?}", fixture_name, current_path);
+
+        if let Ok(entries) = fs::read_dir(&current_path) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    continue; // Skip directories
+                }
+
+                // Check if the file contains the fixture
+                if path.extension().map_or(false, |ext| ext == "py")
+                    && file_contains_fixture(&path, fixture_name)
+                {
+                    return Some(path);
+                }
+            }
+        }
+
+        // Stop if we have reached the stopping path
+        if current_path == *stop_path {
+            break;
+        }
+
+        // Move up one directory level
+        if !current_path.pop() {
+            break; // Stop if we've reached the root
+        }
+    }
+
+    None
+}
+
+fn run_fixture(path: &Path, fixture_name: &str, py: Python) -> Result<PyObject, PyErr> {
+    let currrent_dir = env::current_dir().unwrap();
+    let current_dir = Path::new(&currrent_dir);
+    let path_buf = current_dir.join(path);
+    let path = path_buf.as_path();
+
+    let found = find_fixture_reversely(path, fixture_name, &currrent_dir);
+    match found {
+        Some(file) => {
+            //println!("Found fixture in file: {:?}", file);
+            let mut py_code = fs::read_to_string(file)?;
+            // replace pytest fixture with noop so we can call it directly
+            let s1 = indoc! {"
+            import pytest
+            pytest.fixture = lambda func: func
+            "};
+            py_code.insert_str(0, s1);
+
+            let module = PyModule::from_code_bound(py, &py_code, "", "")?;
+            let function: Py<PyAny> = module.getattr(fixture_name)?.into();
+            let value: PyObject = function.call0(py)?;
+            Ok(value)
+        }
+        None => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+            "No matching function found for fixture: {}",
+            fixture_name
+        ))),
+    }
+}
 
 pub fn run_tests(rx: mpsc::Receiver<TestCase>, tx: mpsc::Sender<TestCase>) -> Result<()> {
     while let Ok(mut test) = rx.recv() {
@@ -51,39 +141,40 @@ pub fn run_tests(rx: mpsc::Receiver<TestCase>, tx: mpsc::Sender<TestCase>) -> Re
             // Prepare a vector to hold the generators to run after the fixture is called
             let mut generators: Vec<Py<PyAny>> = Vec::new();
 
+            //println!("File path, current_dir: {:?}, {:?}", path, current_dir);
+
             for item in parameters.items()?.iter()? {
                 let item = item?;
                 let param_name_obj = item.get_item(0)?; // First item is the parameter name
                 let param_name: String = param_name_obj.extract()?;
-                let param_name_py = PyString::new_bound(py, &param_name);
-                // Check if the module has a function with the same name as the parameter
-                if let Ok(func) = module.getattr(param_name_py) {
-                    // If a matching function is found, call it and store the result in args_vec
-                    let value: PyObject = func.call0()?.into();
-                    let value_iter: Result<Py<PyIterator>, PyErr> = value.extract(py);
-                    if value_iter.is_ok() {
-                        // call next on the iterator to get the value
-                        if let Ok(iterator) = value.getattr(py, "__iter__")?.call0(py) {
-                            // Attempt to call __next__ to get the actual value from the generator/iterator
-                            match iterator.getattr(py, "__next__")?.call0(py) {
-                                Ok(next_value) => {
-                                    args_vec.push(next_value);
-                                    generators.push(iterator);
-                                }
-                                Err(err) => {
-                                    return Err(err);
+
+                let res = run_fixture(path, param_name.as_str(), py);
+
+                match res {
+                    Ok(value) => {
+                        let value_iter: Result<Py<PyIterator>, PyErr> = value.extract(py);
+                        if value_iter.is_ok() {
+                            // call next on the iterator to get the value
+                            if let Ok(iterator) = value.getattr(py, "__iter__")?.call0(py) {
+                                // Attempt to call __next__ to get the actual value from the generator/iterator
+                                match iterator.getattr(py, "__next__")?.call0(py) {
+                                    Ok(next_value) => {
+                                        args_vec.push(next_value);
+                                        generators.push(iterator);
+                                    }
+                                    Err(err) => {
+                                        return Err(err);
+                                    }
                                 }
                             }
+                        } else {
+                            // If __iter__ doesn't exist, use the value directly
+                            args_vec.push(value);
                         }
-                    } else {
-                        // If __iter__ doesn't exist, use the value directly
-                        args_vec.push(value);
                     }
-                } else {
-                    return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                        "No matching function found for parameter: {}",
-                        param_name
-                    )));
+                    Err(err) => {
+                        return Err(err);
+                    }
                 }
             }
 
